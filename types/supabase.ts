@@ -18,6 +18,7 @@ export interface Database {
           weight_kg: number | null
           goal_type: 'lean' | 'athletic' | 'muscular' | null
           goal_image_url: string | null
+          unit_preference: 'metric' | 'imperial'
           progress_score: number
           rank: 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Diamond'
           total_workouts: number
@@ -33,6 +34,7 @@ export interface Database {
           weight_kg?: number | null
           goal_type?: 'lean' | 'athletic' | 'muscular' | null
           goal_image_url?: string | null
+          unit_preference?: 'metric' | 'imperial'
           progress_score?: number
           rank?: 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Diamond'
           total_workouts?: number
@@ -48,6 +50,7 @@ export interface Database {
           weight_kg?: number | null
           goal_type?: 'lean' | 'athletic' | 'muscular' | null
           goal_image_url?: string | null
+          unit_preference?: 'metric' | 'imperial'
           progress_score?: number
           rank?: 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Diamond'
           total_workouts?: number

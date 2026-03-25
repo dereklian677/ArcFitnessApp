@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -9,6 +9,8 @@ import { LogOut, Lock, Sparkles, Cpu } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { profileSchema, type ProfileFormData } from '@/lib/validations/profile'
 import { useProfile } from '@/lib/hooks/useProfile'
+import { useUnit } from '@/lib/context/UnitContext'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
@@ -23,13 +25,20 @@ import type { Rank } from '@/types'
 export default function ProfilePage() {
   const router = useRouter()
   const { profile, isLoading, updateProfile } = useProfile()
+  const { preference, setPreference } = useUnit()
   const supabase = createClient()
+
+  // Imperial display state — decoupled from form fields to avoid double-conversion
+  const [feetVal, setFeetVal] = useState('')
+  const [inchesVal, setInchesVal] = useState('')
+  const [weightLbsVal, setWeightLbsVal] = useState('')
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: { full_name: '', username: '', height_cm: undefined, weight_kg: undefined, goal_type: undefined },
   })
 
+  // Reset form when profile loads
   useEffect(() => {
     if (profile) {
       form.reset({
@@ -42,6 +51,28 @@ export default function ProfilePage() {
     }
   }, [profile, form])
 
+  // Re-derive imperial display values when preference changes or profile loads
+  useEffect(() => {
+    if (preference !== 'imperial') return
+    const cm = form.getValues('height_cm')
+    const kg = form.getValues('weight_kg')
+    if (cm) {
+      const totalIn = cm / 2.54
+      setFeetVal(String(Math.floor(totalIn / 12)))
+      setInchesVal(String(Math.round(totalIn % 12)))
+    } else {
+      setFeetVal('')
+      setInchesVal('')
+    }
+    if (kg) {
+      setWeightLbsVal(String(Math.round(kg * 2.20462 * 10) / 10))
+    } else {
+      setWeightLbsVal('')
+    }
+  // profile is included so displays re-sync after profile loads while in imperial mode
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preference, profile])
+
   const onSubmit = async (data: ProfileFormData) => {
     await updateProfile({
       full_name: data.full_name,
@@ -50,6 +81,11 @@ export default function ProfilePage() {
       weight_kg: data.weight_kg ?? null,
       goal_type: data.goal_type ?? null,
     })
+  }
+
+  const handleUnitChange = async (pref: 'metric' | 'imperial') => {
+    setPreference(pref)
+    await updateProfile({ unit_preference: pref })
   }
 
   const handleLogout = async () => {
@@ -109,43 +145,100 @@ export default function ProfilePage() {
                   </FormItem>
                 )}
               />
+
+              {/* Height field */}
               <FormField
                 control={form.control}
                 name="height_cm"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white">Height (cm)</FormLabel>
+                    <FormLabel className="text-white">
+                      Height ({preference === 'imperial' ? 'ft / in' : 'cm'})
+                    </FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        {...field}
-                        value={field.value ?? ''}
-                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                      />
+                      {preference === 'imperial' ? (
+                        <div className="flex gap-2 items-center">
+                          <Input
+                            type="number"
+                            placeholder="5"
+                            min="3"
+                            max="8"
+                            value={feetVal}
+                            onChange={(e) => {
+                              setFeetVal(e.target.value)
+                              const ft = Number(e.target.value) || 0
+                              const ins = Number(inchesVal) || 0
+                              const cm = Math.round((ft * 12 + ins) * 2.54)
+                              field.onChange(cm || undefined)
+                            }}
+                          />
+                          <span className="text-[#a1a1aa] text-sm flex-shrink-0">ft</span>
+                          <Input
+                            type="number"
+                            placeholder="11"
+                            min="0"
+                            max="11"
+                            value={inchesVal}
+                            onChange={(e) => {
+                              setInchesVal(e.target.value)
+                              const ft = Number(feetVal) || 0
+                              const ins = Number(e.target.value) || 0
+                              const cm = Math.round((ft * 12 + ins) * 2.54)
+                              field.onChange(cm || undefined)
+                            }}
+                          />
+                          <span className="text-[#a1a1aa] text-sm flex-shrink-0">in</span>
+                        </div>
+                      ) : (
+                        <Input
+                          type="number"
+                          value={field.value ?? ''}
+                          onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                        />
+                      )}
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+              {/* Weight field */}
               <FormField
                 control={form.control}
                 name="weight_kg"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white">Weight (kg)</FormLabel>
+                    <FormLabel className="text-white">
+                      Weight ({preference === 'imperial' ? 'lbs' : 'kg'})
+                    </FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        step="0.1"
-                        {...field}
-                        value={field.value ?? ''}
-                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                      />
+                      {preference === 'imperial' ? (
+                        <Input
+                          type="number"
+                          step="0.1"
+                          value={weightLbsVal}
+                          onChange={(e) => {
+                            setWeightLbsVal(e.target.value)
+                            const raw = e.target.value ? Number(e.target.value) : undefined
+                            field.onChange(raw !== undefined
+                              ? parseFloat((raw / 2.20462).toFixed(1))
+                              : undefined)
+                          }}
+                        />
+                      ) : (
+                        <Input
+                          type="number"
+                          step="0.1"
+                          value={field.value ?? ''}
+                          onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                        />
+                      )}
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="goal_type"
@@ -175,6 +268,39 @@ export default function ProfilePage() {
             <Button type="submit" className="w-full">Save changes</Button>
           </form>
         </Form>
+      </div>
+
+      {/* Preferences */}
+      <div className="bg-[#111111] border border-[#1a1a1a] rounded-xl p-5 space-y-4">
+        <h2 className="font-semibold text-white">Preferences</h2>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-white">Units</p>
+            <p className="text-xs text-[#a1a1aa] mt-0.5">Weight and height display</p>
+          </div>
+          <div className="flex rounded-lg border border-[#2a2a2a] overflow-hidden">
+            <button
+              type="button"
+              onClick={() => handleUnitChange('metric')}
+              className={cn(
+                'px-3 py-1.5 text-sm transition-colors',
+                preference === 'metric' ? 'bg-primary text-white' : 'text-[#a1a1aa] hover:text-white'
+              )}
+            >
+              kg / cm
+            </button>
+            <button
+              type="button"
+              onClick={() => handleUnitChange('imperial')}
+              className={cn(
+                'px-3 py-1.5 text-sm transition-colors',
+                preference === 'imperial' ? 'bg-primary text-white' : 'text-[#a1a1aa] hover:text-white'
+              )}
+            >
+              lbs / ft
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Goal physique AI placeholder */}

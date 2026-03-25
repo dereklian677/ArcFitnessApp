@@ -30,18 +30,31 @@ export function calculateVolume(exercises: Exercise[]): number {
   }, 0)
 }
 
-export function formatVolume(volume: number): string {
-  if (volume >= 1000) {
-    return `${(volume / 1000).toFixed(1)}k kg`
+export function formatVolume(volume: number, preference: 'metric' | 'imperial' = 'metric'): string {
+  if (preference === 'imperial') {
+    const lbs = volume * 2.20462
+    if (lbs >= 1000) return `${(lbs / 1000).toFixed(1)}k lbs`
+    return `${lbs.toFixed(0)} lbs`
   }
+  if (volume >= 1000) return `${(volume / 1000).toFixed(1)}k kg`
   return `${volume.toFixed(0)} kg`
 }
 
-export function formatWeight(kg: number, unit: 'kg' | 'lbs' = 'kg'): string {
-  if (unit === 'lbs') {
+export function formatWeight(kg: number, preference: 'metric' | 'imperial' = 'metric'): string {
+  if (preference === 'imperial') {
     return `${(kg * 2.20462).toFixed(1)} lbs`
   }
   return `${kg} kg`
+}
+
+export function formatHeight(cm: number, preference: 'metric' | 'imperial' = 'metric'): string {
+  if (preference === 'imperial') {
+    const totalInches = cm / 2.54
+    const feet = Math.floor(totalInches / 12)
+    const inches = Math.round(totalInches % 12)
+    return `${feet}'${inches}"`
+  }
+  return `${cm} cm`
 }
 
 export function getRankFromWorkouts(totalWorkouts: number): Rank {

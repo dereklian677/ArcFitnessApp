@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import { Plus, Camera, Dumbbell, Flame } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { signPhotoUrls } from '@/lib/supabase/storage'
 import { calculateVolume, getGreeting, getRankProgress, formatDateShort, formatVolume } from '@/lib/utils'
 import { getNextRank } from '@/lib/constants/ranks'
 import { ScoreRing } from '@/components/progress/ScoreRing'
@@ -37,6 +38,7 @@ export default async function DashboardPage() {
 
   const profile = profileRes.data
   if (!profile) redirect('/onboarding')
+  const unitPreference = (profile.unit_preference ?? 'metric') as 'metric' | 'imperial'
 
   const recentWorkouts: WorkoutSummary[] = (workoutsRes.data ?? []).map((w) => ({
     ...w,
@@ -44,7 +46,7 @@ export default async function DashboardPage() {
     total_volume: calculateVolume(w.exercises ?? []),
   }))
 
-  const recentPhotos = photosRes.data ?? []
+  const recentPhotos = await signPhotoUrls(supabase, photosRes.data ?? [])
   const firstName = profile.full_name?.split(' ')[0] ?? profile.username ?? 'there'
   const rank = profile.rank as Rank
   const rankProgress = getRankProgress(profile.total_workouts)
@@ -113,7 +115,7 @@ export default async function DashboardPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {recentWorkouts.map((w) => <WorkoutCard key={w.id} workout={w} />)}
+            {recentWorkouts.map((w) => <WorkoutCard key={w.id} workout={w} unitPreference={unitPreference} />)}
           </div>
         )}
       </section>

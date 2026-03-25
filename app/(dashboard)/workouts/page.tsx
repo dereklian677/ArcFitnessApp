@@ -15,6 +15,13 @@ export default async function WorkoutsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  const { data: profileData } = await supabase
+    .from('profiles')
+    .select('unit_preference')
+    .eq('id', user.id)
+    .single()
+  const unitPreference = (profileData?.unit_preference ?? 'metric') as 'metric' | 'imperial'
+
   const { data } = await supabase
     .from('workouts')
     .select('*, exercises(*)')
@@ -51,7 +58,7 @@ export default async function WorkoutsPage() {
       ) : (
         <div className="space-y-3">
           {workouts.map((workout) => (
-            <WorkoutCard key={workout.id} workout={workout} />
+            <WorkoutCard key={workout.id} workout={workout} unitPreference={unitPreference} />
           ))}
         </div>
       )}

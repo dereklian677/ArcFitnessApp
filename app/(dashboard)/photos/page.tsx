@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { signPhotoUrls } from '@/lib/supabase/storage'
 import { PhotoGrid } from '@/components/photos/PhotoGrid'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { Button } from '@/components/ui/button'
@@ -12,11 +13,13 @@ export default async function PhotosPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: photos } = await supabase
+  const { data: rawPhotos } = await supabase
     .from('progress_photos')
     .select('*')
     .eq('user_id', user.id)
     .order('taken_at', { ascending: false })
+
+  const photos = await signPhotoUrls(supabase, rawPhotos ?? [])
 
   return (
     <div className="p-4 md:p-6 max-w-3xl mx-auto">

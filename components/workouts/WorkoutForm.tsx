@@ -9,6 +9,8 @@ import { Plus, Trash2, GripVertical, Loader2, Trophy } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { workoutSchema, type WorkoutFormData } from '@/lib/validations/workout'
 import { checkPR } from '@/lib/utils'
+import { useUnit } from '@/lib/context/UnitContext'
+import { ExerciseWeightInput } from './ExerciseWeightInput'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -19,6 +21,7 @@ export function WorkoutForm() {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const supabase = createClient()
+  const { preference } = useUnit()
 
   const form = useForm<WorkoutFormData>({
     resolver: zodResolver(workoutSchema),
@@ -217,15 +220,14 @@ export function WorkoutForm() {
                       name={`exercises.${index}.weight_kg`}
                       render={({ field: f }) => (
                         <FormItem>
-                          <FormLabel className="text-white text-xs">Weight (kg)</FormLabel>
+                          <FormLabel className="text-white text-xs">
+                            Weight ({preference === 'imperial' ? 'lbs' : 'kg'})
+                          </FormLabel>
                           <FormControl>
-                            <Input
-                              type="number"
-                              step="0.5"
-                              placeholder="60"
-                              {...f}
-                              value={f.value ?? ''}
-                              onChange={(e) => f.onChange(e.target.value ? Number(e.target.value) : null)}
+                            <ExerciseWeightInput
+                              value={f.value}
+                              onChange={f.onChange}
+                              preference={preference}
                             />
                           </FormControl>
                         </FormItem>

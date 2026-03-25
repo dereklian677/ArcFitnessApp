@@ -36,6 +36,13 @@ const GOAL_OPTIONS = [
 export default function OnboardingPage() {
   const [step, setStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
+  const [unitPref, setUnitPref] = useState<'metric' | 'imperial'>('metric')
+
+  // Imperial display state — form fields always store metric (cm/kg)
+  const [feetVal, setFeetVal] = useState('')
+  const [inchesVal, setInchesVal] = useState('')
+  const [weightLbsVal, setWeightLbsVal] = useState('')
+
   const supabase = createClient()
 
   const form = useForm<OnboardingFormData>({
@@ -49,6 +56,16 @@ export default function OnboardingPage() {
     },
   })
 
+  const handleUnitPrefChange = (pref: 'metric' | 'imperial') => {
+    setUnitPref(pref)
+    // Clear all display state and form values when switching units (fresh start)
+    setFeetVal('')
+    setInchesVal('')
+    setWeightLbsVal('')
+    form.setValue('height_cm', undefined as unknown as number)
+    form.setValue('weight_kg', undefined as unknown as number)
+  }
+
   const onSubmit = async (data: OnboardingFormData) => {
     setIsLoading(true)
 
@@ -59,7 +76,7 @@ export default function OnboardingPage() {
       return
     }
 
-    // Use upsert in case the auto-create trigger didn't fire for this user
+    // Form fields already store metric values (cm/kg) — onChange handlers convert imperial input
     const { error } = await supabase
       .from('profiles')
       .upsert({
@@ -69,6 +86,7 @@ export default function OnboardingPage() {
         height_cm: data.height_cm,
         weight_kg: data.weight_kg,
         goal_type: data.goal_type,
+        unit_preference: unitPref,
       })
 
     setIsLoading(false)
@@ -174,43 +192,130 @@ export default function OnboardingPage() {
                     <h2 className="text-lg font-semibold text-white">Your stats</h2>
                     <p className="text-sm text-[#a1a1aa]">Used to personalize your experience</p>
                   </div>
+
+                  {/* Unit toggle */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-[#a1a1aa]">Units</span>
+                    <div className="flex rounded-lg border border-[#2a2a2a] overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => handleUnitPrefChange('metric')}
+                        className={cn(
+                          'px-3 py-1.5 text-sm transition-colors',
+                          unitPref === 'metric' ? 'bg-primary text-white' : 'text-[#a1a1aa] hover:text-white'
+                        )}
+                      >
+                        kg / cm
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleUnitPrefChange('imperial')}
+                        className={cn(
+                          'px-3 py-1.5 text-sm transition-colors',
+                          unitPref === 'imperial' ? 'bg-primary text-white' : 'text-[#a1a1aa] hover:text-white'
+                        )}
+                      >
+                        lbs / ft
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Height field */}
                   <FormField
                     control={form.control}
                     name="height_cm"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Height (cm)</FormLabel>
+                        <FormLabel className="text-white">
+                          Height ({unitPref === 'imperial' ? 'ft / in' : 'cm'})
+                        </FormLabel>
                         <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="175"
-                            {...field}
-                            onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                          />
+                          {unitPref === 'imperial' ? (
+                            <div className="flex gap-2 items-center">
+                              <Input
+                                type="number"
+                                placeholder="5"
+                                min="3"
+                                max="8"
+                                value={feetVal}
+                                onChange={(e) => {
+                                  setFeetVal(e.target.value)
+                                  const ft = Number(e.target.value) || 0
+                                  const ins = Number(inchesVal) || 0
+                                  const cm = Math.round((ft * 12 + ins) * 2.54)
+                                  field.onChange(cm || undefined)
+                                }}
+                              />
+                              <span className="text-[#a1a1aa] text-sm flex-shrink-0">ft</span>
+                              <Input
+                                type="number"
+                                placeholder="11"
+                                min="0"
+                                max="11"
+                                value={inchesVal}
+                                onChange={(e) => {
+                                  setInchesVal(e.target.value)
+                                  const ft = Number(feetVal) || 0
+                                  const ins = Number(e.target.value) || 0
+                                  const cm = Math.round((ft * 12 + ins) * 2.54)
+                                  field.onChange(cm || undefined)
+                                }}
+                              />
+                              <span className="text-[#a1a1aa] text-sm flex-shrink-0">in</span>
+                            </div>
+                          ) : (
+                            <Input
+                              type="number"
+                              placeholder="175"
+                              value={field.value ?? ''}
+                              onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                            />
+                          )}
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
+                  {/* Weight field */}
                   <FormField
                     control={form.control}
                     name="weight_kg"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Weight (kg)</FormLabel>
+                        <FormLabel className="text-white">
+                          Weight ({unitPref === 'imperial' ? 'lbs' : 'kg'})
+                        </FormLabel>
                         <FormControl>
-                          <Input
-                            type="number"
-                            step="0.1"
-                            placeholder="75"
-                            {...field}
-                            onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                          />
+                          {unitPref === 'imperial' ? (
+                            <Input
+                              type="number"
+                              step="0.1"
+                              placeholder="165"
+                              value={weightLbsVal}
+                              onChange={(e) => {
+                                setWeightLbsVal(e.target.value)
+                                const raw = e.target.value ? Number(e.target.value) : undefined
+                                field.onChange(raw !== undefined
+                                  ? parseFloat((raw / 2.20462).toFixed(1))
+                                  : undefined)
+                              }}
+                            />
+                          ) : (
+                            <Input
+                              type="number"
+                              step="0.1"
+                              placeholder="75"
+                              value={field.value ?? ''}
+                              onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                            />
+                          )}
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
                   <div className="flex gap-3">
                     <Button type="button" variant="outline" className="flex-1" onClick={() => setStep(1)}>
                       <ChevronLeft className="h-4 w-4" /> Back

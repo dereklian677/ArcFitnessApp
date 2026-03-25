@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import { TrendingUp, Trophy } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { signPhotoUrls } from '@/lib/supabase/storage'
 import { calculateVolume } from '@/lib/utils'
 import { ScoreRing } from '@/components/progress/ScoreRing'
 import { PRTable } from '@/components/progress/PRTable'
@@ -25,7 +26,7 @@ export default async function ProgressPage() {
 
   // Fetch profile, photos, PRs, workouts
   const [profileRes, photosRes, prsRes, workoutsRes] = await Promise.all([
-    supabase.from('profiles').select('progress_score').eq('id', user.id).single(),
+    supabase.from('profiles').select('progress_score, unit_preference').eq('id', user.id).single(),
     supabase.from('progress_photos').select('*').eq('user_id', user.id).order('taken_at', { ascending: true }),
     supabase.from('personal_records').select('*').eq('user_id', user.id).order('achieved_at', { ascending: false }),
     supabase
@@ -37,7 +38,8 @@ export default async function ProgressPage() {
   ])
 
   const progressScore = profileRes.data?.progress_score ?? 0
-  const photos = photosRes.data ?? []
+  const unitPreference = (profileRes.data?.unit_preference ?? 'metric') as 'metric' | 'imperial'
+  const photos = await signPhotoUrls(supabase, photosRes.data ?? [])
   const prs = prsRes.data ?? []
 
   // Compute volume chart data server-side
@@ -136,7 +138,7 @@ export default async function ProgressPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="px-3">
-          <PRTable records={prs} />
+          <PRTable records={prs} unitPreference={unitPreference} />
         </CardContent>
       </Card>
     </div>

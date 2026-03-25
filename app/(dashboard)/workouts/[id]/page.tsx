@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { ArrowLeft, Calendar, FileText } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import { formatDate, formatVolume, calculateVolume } from '@/lib/utils'
+import { formatDate, formatVolume, formatWeight, calculateVolume } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
 export default async function WorkoutDetailPage({ params }: { params: { id: string } }) {
@@ -10,6 +10,13 @@ export default async function WorkoutDetailPage({ params }: { params: { id: stri
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
+
+  const { data: profileData } = await supabase
+    .from('profiles')
+    .select('unit_preference')
+    .eq('id', user.id)
+    .single()
+  const unitPreference = (profileData?.unit_preference ?? 'metric') as 'metric' | 'imperial'
 
   const { data: workout } = await supabase
     .from('workouts')
@@ -42,7 +49,7 @@ export default async function WorkoutDetailPage({ params }: { params: { id: stri
           </span>
           {totalVolume > 0 && (
             <span className="text-sm text-[#a1a1aa]">
-              Total volume: <span className="text-white font-medium">{formatVolume(totalVolume)}</span>
+              Total volume: <span className="text-white font-medium">{formatVolume(totalVolume, unitPreference)}</span>
             </span>
           )}
         </div>
@@ -78,7 +85,7 @@ export default async function WorkoutDetailPage({ params }: { params: { id: stri
                           <span className="text-sm text-[#a1a1aa]">{exercise.reps} reps</span>
                         )}
                         {exercise.weight_kg && (
-                          <span className="text-sm text-[#a1a1aa]">{exercise.weight_kg} kg</span>
+                          <span className="text-sm text-[#a1a1aa]">{formatWeight(exercise.weight_kg, unitPreference)}</span>
                         )}
                         {exercise.duration_seconds && (
                           <span className="text-sm text-[#a1a1aa]">{exercise.duration_seconds}s</span>
@@ -90,7 +97,7 @@ export default async function WorkoutDetailPage({ params }: { params: { id: stri
                     </div>
                     {exercise.sets && exercise.reps && exercise.weight_kg && (
                       <span className="text-sm text-[#a1a1aa] font-medium whitespace-nowrap">
-                        {formatVolume(exercise.sets * exercise.reps * exercise.weight_kg)}
+                        {formatVolume(exercise.sets * exercise.reps * exercise.weight_kg, unitPreference)}
                       </span>
                     )}
                   </div>

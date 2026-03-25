@@ -5,9 +5,10 @@ import type { WorkoutSummary } from '@/types'
 
 interface WorkoutCardProps {
   workout: WorkoutSummary
+  unitPreference?: 'metric' | 'imperial'
 }
 
-export function WorkoutCard({ workout }: WorkoutCardProps) {
+export function WorkoutCard({ workout, unitPreference = 'metric' }: WorkoutCardProps) {
   return (
     <Link
       href={`/workouts/${workout.id}`}
@@ -32,7 +33,7 @@ export function WorkoutCard({ workout }: WorkoutCardProps) {
         {workout.total_volume > 0 && (
           <div className="flex items-center gap-1.5 text-sm font-medium text-[#a1a1aa] flex-shrink-0">
             <TrendingUp className="h-4 w-4" />
-            {formatVolume(workout.total_volume)}
+            {formatVolume(workout.total_volume, unitPreference)}
           </div>
         )}
       </div>

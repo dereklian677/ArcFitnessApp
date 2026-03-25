@@ -1,12 +1,13 @@
 import { Trophy } from 'lucide-react'
-import { formatDateShort } from '@/lib/utils'
+import { formatDateShort, formatWeight } from '@/lib/utils'
 import type { PersonalRecord } from '@/types'
 
 interface PRTableProps {
   records: PersonalRecord[]
+  unitPreference?: 'metric' | 'imperial'
 }
 
-export function PRTable({ records }: PRTableProps) {
+export function PRTable({ records, unitPreference = 'metric' }: PRTableProps) {
   if (records.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center">
@@ -32,7 +33,7 @@ export function PRTable({ records }: PRTableProps) {
             <tr key={pr.id} className="hover:bg-[#111111]/50 transition-colors">
               <td className="py-3 px-2 font-medium text-white">{pr.exercise_name}</td>
               <td className="py-3 px-2 text-right text-[#a1a1aa]">
-                {pr.weight_kg ? `${pr.weight_kg} kg` : '—'}
+                {pr.weight_kg ? formatWeight(pr.weight_kg, unitPreference) : '—'}
               </td>
               <td className="py-3 px-2 text-right text-[#a1a1aa]">
                 {pr.reps ?? '—'}

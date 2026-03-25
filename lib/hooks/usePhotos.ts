@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
+import { signPhotoUrls } from '@/lib/supabase/storage'
 import type { ProgressPhoto, PhotoType } from '@/types'
 
 export function usePhotos() {
@@ -21,7 +22,10 @@ export function usePhotos() {
       .eq('user_id', user.id)
       .order('taken_at', { ascending: false })
 
-    if (!error && data) setPhotos(data)
+    if (!error && data) {
+      const signed = await signPhotoUrls(supabase, data)
+      setPhotos(signed)
+    }
     setIsLoading(false)
   }, [supabase])
 
@@ -49,13 +53,10 @@ export function usePhotos() {
       return false
     }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('progress-photos')
-      .getPublicUrl(filePath)
-
+    // Store the storage path (not a public URL) — signed URLs are generated on fetch
     const { error: dbError } = await supabase.from('progress_photos').insert({
       user_id: user.id,
-      photo_url: publicUrl,
+      photo_url: filePath,
       photo_type: photoType,
       taken_at: takenAt ?? new Date().toISOString(),
     })
@@ -71,10 +72,10 @@ export function usePhotos() {
   }
 
   const deletePhoto = async (id: string, photoUrl: string) => {
-    // Extract file path from URL
-    const urlParts = photoUrl.split('/progress-photos/')
-    if (urlParts[1]) {
-      await supabase.storage.from('progress-photos').remove([urlParts[1]])
+    const { extractStoragePath } = await import('@/lib/supabase/storage')
+    const path = extractStoragePath(photoUrl)
+    if (path) {
+      await supabase.storage.from('progress-photos').remove([path])
     }
 
     const { error } = await supabase.from('progress_photos').delete().eq('id', id)
