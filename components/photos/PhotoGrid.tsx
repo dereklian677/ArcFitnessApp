@@ -1,0 +1,68 @@
+'use client'
+
+import { useState } from 'react'
+import { Camera } from 'lucide-react'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { PhotoCard } from './PhotoCard'
+import { PhotoModal } from './PhotoModal'
+import { EmptyState } from '@/components/shared/EmptyState'
+import type { ProgressPhoto, PhotoType } from '@/types'
+
+interface PhotoGridProps {
+  photos: ProgressPhoto[]
+}
+
+const FILTER_TABS = [
+  { value: 'all', label: 'All' },
+  { value: 'front', label: 'Front' },
+  { value: 'back', label: 'Back' },
+  { value: 'side', label: 'Side' },
+]
+
+export function PhotoGrid({ photos }: PhotoGridProps) {
+  const [selectedPhoto, setSelectedPhoto] = useState<ProgressPhoto | null>(null)
+  const [activeTab, setActiveTab] = useState('all')
+
+  const filtered = activeTab === 'all'
+    ? photos
+    : photos.filter((p) => p.photo_type === activeTab as PhotoType)
+
+  return (
+    <>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-4">
+          {FILTER_TABS.map((tab) => (
+            <TabsTrigger key={tab.value} value={tab.value}>
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        <TabsContent value={activeTab}>
+          {filtered.length === 0 ? (
+            <EmptyState
+              icon={Camera}
+              title="No photos yet"
+              description={activeTab === 'all'
+                ? 'Upload your first progress photo to start tracking your physique over time.'
+                : `No ${activeTab} photos yet.`}
+              action={activeTab === 'all' ? { label: 'Upload photo', href: '/photos/upload' } : undefined}
+            />
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-3">
+              {filtered.map((photo) => (
+                <PhotoCard
+                  key={photo.id}
+                  photo={photo}
+                  onClick={setSelectedPhoto}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      <PhotoModal photo={selectedPhoto} onClose={() => setSelectedPhoto(null)} />
+    </>
+  )
+}

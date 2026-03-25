@@ -1,74 +1,125 @@
-# ArcFitnessApp
+# Arc — Physique Transformation Tracker
 
-A physique transformation tracker. Log workouts, track progress photos, and visualize your journey toward your goal physique.
+A full-stack physique transformation app. Log workouts, upload progress photos, and track your journey toward your goal physique. Features a ranked progression system and AI-powered analysis (coming soon).
 
 ---
 
 ## Tech Stack
 
-- [Next.js 14](https://nextjs.org/) (App Router)
-- [Supabase](https://supabase.com/) (Auth, Database, Storage)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [TypeScript](https://www.typescriptlang.org/)
+- **Next.js 14** — App Router, Server Components
+- **Supabase** — Auth, PostgreSQL database, Storage (`@supabase/ssr`)
+- **Tailwind CSS** + **shadcn/ui** — Dark mode UI
+- **TypeScript** — Strict mode, zero `any`
+- **react-hook-form** + **zod** — Form validation
+- **recharts** — Volume charts
+- **sonner** — Toast notifications
 
 ---
 
 ## Prerequisites
 
 - Node.js 18+
-- A [Supabase](https://supabase.com/) project (free tier is fine)
-- A [GitHub](https://github.com/) account
+- A [Supabase](https://supabase.com/) project (free tier works)
 
 ---
 
 ## Setup
 
-### 1. Clone the repository
+### 1. Clone and install
 
 ```bash
 git clone https://github.com/dereklian677/ArcFitnessApp.git
 cd ArcFitnessApp
-```
-
-### 2. Install dependencies
-
-```bash
 npm install
 ```
 
-### 3. Set up environment variables
-
-Create a `.env.local` file in the root of the project:
+### 2. Environment variables
 
 ```bash
 cp .env.example .env.local
 ```
 
-Then fill in your Supabase credentials from your [Supabase project settings](https://app.supabase.com):
+Fill in your values from the [Supabase dashboard](https://app.supabase.com) → Project Settings → API:
 
 ```
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+SUPABASE_SERVICE_ROLE_KEY=eyJ...
 ```
 
-### 4. Run the database migration
+### 3. Run the database schema
 
-In your Supabase project, go to the **SQL Editor** and paste the contents of `schema.sql`, then click **Run**.
+In your Supabase project, go to **SQL Editor** → paste the full contents of `schema.sql` → click **Run**.
 
-Alternatively, if you have the Supabase CLI installed:
+This creates all tables, RLS policies, triggers, and the storage bucket.
 
-```bash
-supabase db push
-```
-
-### 5. Run the development server
+### 4. Start the dev server
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000).
+
+---
+
+## App Routes
+
+| Route | Description |
+|---|---|
+| `/` | Landing page |
+| `/signup` | Create account |
+| `/login` | Sign in |
+| `/onboarding` | Profile setup (post-signup) |
+| `/dashboard` | Main dashboard |
+| `/workouts` | Workout history |
+| `/workouts/new` | Log a workout |
+| `/workouts/[id]` | Workout detail |
+| `/photos` | Progress photo gallery |
+| `/photos/upload` | Upload a photo |
+| `/progress` | Progress overview + charts |
+| `/profile` | Profile settings |
+
+---
+
+## Project Structure
+
+```
+/app
+  /(auth)         → Login, Signup
+  /(onboarding)   → Post-signup setup
+  /(dashboard)    → Authenticated app routes
+/components
+  /ui             → shadcn/ui primitives
+  /layout         → Sidebar, MobileNav, Header
+  /workouts       → Workout-specific components
+  /photos         → Photo gallery components
+  /progress       → Charts, ScoreRing, AI placeholders
+  /shared         → EmptyState, RankBadge, SkeletonCard
+/lib
+  /supabase       → Client/server Supabase instances
+  /hooks          → Data fetching hooks
+  /utils          → Helper functions
+  /validations    → Zod schemas
+  /constants      → Exercise list, rank thresholds
+/types            → TypeScript types
+middleware.ts     → Auth + route protection
+schema.sql        → Full database schema
+```
+
+---
+
+## Rank System
+
+| Rank | Workouts Required |
+|---|---|
+| Bronze | 0 |
+| Silver | 10 |
+| Gold | 25 |
+| Platinum | 50 |
+| Diamond | 100 |
+
+Rank is updated automatically via a Supabase database trigger on each workout insert.
 
 ---
 
@@ -77,22 +128,10 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 | Variable | Description |
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase public anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Your Supabase service role key (server-side only) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public anon key (safe for browser) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key — server-only, never expose to browser |
 
-> Never commit your `.env.local` file. It is already listed in `.gitignore`.
-
----
-
-## Project Structure
-
-```
-/app            → Next.js App Router pages
-/components     → Reusable UI components
-/lib            → Supabase client, hooks, utilities
-/types          → TypeScript types
-schema.sql      → Database schema and RLS policies
-```
+> Never commit `.env.local`. It is already in `.gitignore`.
 
 ---
 
