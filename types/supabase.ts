@@ -18,6 +18,9 @@ export interface Database {
           weight_kg: number | null
           goal_type: 'lean' | 'athletic' | 'muscular' | null
           goal_image_url: string | null
+          goal_timeframe: '6months' | '1year' | '2years' | null
+          goal_generated_at: string | null
+          goal_gender: 'male' | 'female' | null
           unit_preference: 'metric' | 'imperial'
           progress_score: number
           rank: 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Diamond'
@@ -34,6 +37,9 @@ export interface Database {
           weight_kg?: number | null
           goal_type?: 'lean' | 'athletic' | 'muscular' | null
           goal_image_url?: string | null
+          goal_timeframe?: '6months' | '1year' | '2years' | null
+          goal_generated_at?: string | null
+          goal_gender?: 'male' | 'female' | null
           unit_preference?: 'metric' | 'imperial'
           progress_score?: number
           rank?: 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Diamond'
@@ -50,6 +56,9 @@ export interface Database {
           weight_kg?: number | null
           goal_type?: 'lean' | 'athletic' | 'muscular' | null
           goal_image_url?: string | null
+          goal_timeframe?: '6months' | '1year' | '2years' | null
+          goal_generated_at?: string | null
+          goal_gender?: 'male' | 'female' | null
           unit_preference?: 'metric' | 'imperial'
           progress_score?: number
           rank?: 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Diamond'

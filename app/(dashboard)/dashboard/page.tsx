@@ -3,12 +3,13 @@ import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import { Plus, Camera, Dumbbell, Flame } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import { signPhotoUrls } from '@/lib/supabase/storage'
+import { signPhotoUrls, signGoalPhysiqueUrl } from '@/lib/supabase/storage'
 import { calculateVolume, getGreeting, getRankProgress, formatDateShort, formatVolume } from '@/lib/utils'
 import { getNextRank } from '@/lib/constants/ranks'
 import { ScoreRing } from '@/components/progress/ScoreRing'
 import { RankBadge } from '@/components/shared/RankBadge'
 import { WorkoutCard } from '@/components/workouts/WorkoutCard'
+import { GoalPhysiqueCard } from '@/components/progress/GoalPhysiqueCard'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
@@ -47,6 +48,12 @@ export default async function DashboardPage() {
   }))
 
   const recentPhotos = await signPhotoUrls(supabase, photosRes.data ?? [])
+
+  // Re-sign goal physique URL server-side (stored URL may have expired)
+  const goalSignedUrl = profile.goal_image_url
+    ? await signGoalPhysiqueUrl(supabase, user.id)
+    : null
+
   const firstName = profile.full_name?.split(' ')[0] ?? profile.username ?? 'there'
   const rank = profile.rank as Rank
   const rankProgress = getRankProgress(profile.total_workouts)
@@ -151,6 +158,14 @@ export default async function DashboardPage() {
           </div>
         </section>
       )}
+
+      {/* Goal physique */}
+      <section>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-semibold text-white">Goal Physique</h2>
+        </div>
+        <GoalPhysiqueCard profile={profile} initialSignedUrl={goalSignedUrl} />
+      </section>
 
       {/* Quick actions */}
       <div className="grid grid-cols-2 gap-3">

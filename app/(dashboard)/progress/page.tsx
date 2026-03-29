@@ -3,7 +3,7 @@ import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import { TrendingUp, Trophy } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import { signPhotoUrls } from '@/lib/supabase/storage'
+import { signPhotoUrls, signGoalPhysiqueUrl } from '@/lib/supabase/storage'
 import { calculateVolume } from '@/lib/utils'
 import { ScoreRing } from '@/components/progress/ScoreRing'
 import { PRTable } from '@/components/progress/PRTable'
@@ -26,7 +26,11 @@ export default async function ProgressPage() {
 
   // Fetch profile, photos, PRs, workouts
   const [profileRes, photosRes, prsRes, workoutsRes] = await Promise.all([
-    supabase.from('profiles').select('progress_score, unit_preference').eq('id', user.id).single(),
+    supabase
+      .from('profiles')
+      .select('progress_score, unit_preference, goal_image_url, goal_type, goal_timeframe')
+      .eq('id', user.id)
+      .single(),
     supabase.from('progress_photos').select('*').eq('user_id', user.id).order('taken_at', { ascending: true }),
     supabase.from('personal_records').select('*').eq('user_id', user.id).order('achieved_at', { ascending: false }),
     supabase
@@ -41,6 +45,13 @@ export default async function ProgressPage() {
   const unitPreference = (profileRes.data?.unit_preference ?? 'metric') as 'metric' | 'imperial'
   const photos = await signPhotoUrls(supabase, photosRes.data ?? [])
   const prs = prsRes.data ?? []
+
+  // Re-sign goal physique URL if the user has generated one
+  const goalSignedUrl = profileRes.data?.goal_image_url
+    ? await signGoalPhysiqueUrl(supabase, user.id)
+    : null
+  const goalType = profileRes.data?.goal_type ?? null
+  const goalTimeframe = profileRes.data?.goal_timeframe ?? null
 
   // Compute volume chart data server-side
   const volumeByDate: Record<string, number> = {}
@@ -59,6 +70,12 @@ export default async function ProgressPage() {
   const firstPhoto = photos[0]
   const latestPhoto = photos[photos.length - 1]
   const showComparison = photos.length >= 2 && firstPhoto !== latestPhoto
+
+  const TIMEFRAME_LABELS: Record<string, string> = {
+    '6months': '6 Months',
+    '1year': '1 Year',
+    '2years': '2 Years',
+  }
 
   return (
     <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-6">
@@ -82,35 +99,72 @@ export default async function ProgressPage() {
       <AIPlaceholderCard />
 
       {/* Photo comparison */}
-      {showComparison && (
+      {(showComparison || goalSignedUrl) && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Photo Comparison</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <p className="text-xs text-[#a1a1aa] text-center">Earliest</p>
-                <div className="relative aspect-[3/4] rounded-lg overflow-hidden">
-                  <Image
-                    src={firstPhoto.photo_url}
-                    alt="Earliest photo"
-                    fill
-                    className="object-cover"
-                  />
+            <div
+              className="grid gap-4"
+              style={{
+                gridTemplateColumns:
+                  showComparison && goalSignedUrl
+                    ? 'repeat(3, 1fr)'
+                    : showComparison
+                    ? 'repeat(2, 1fr)'
+                    : '1fr',
+              }}
+            >
+              {showComparison && (
+                <>
+                  <div className="space-y-2">
+                    <p className="text-xs text-[#a1a1aa] text-center">Earliest</p>
+                    <div className="relative aspect-[3/4] rounded-lg overflow-hidden">
+                      <Image
+                        src={firstPhoto.photo_url}
+                        alt="Earliest photo"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-xs text-[#a1a1aa] text-center">Most Recent</p>
+                    <div className="relative aspect-[3/4] rounded-lg overflow-hidden">
+                      <Image
+                        src={latestPhoto.photo_url}
+                        alt="Most recent photo"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+              {goalSignedUrl && (
+                <div className="space-y-2">
+                  <p className="text-xs text-primary text-center font-medium">Your Goal</p>
+                  <div className="relative aspect-[3/4] rounded-lg overflow-hidden border border-primary/30">
+                    <Image
+                      src={goalSignedUrl}
+                      alt="Goal physique"
+                      fill
+                      className="object-cover object-top"
+                    />
+                  </div>
+                  {(goalType || goalTimeframe) && (
+                    <p className="text-xs text-[#a1a1aa] text-center">
+                      {[
+                        goalType ? goalType.charAt(0).toUpperCase() + goalType.slice(1) : null,
+                        goalTimeframe ? TIMEFRAME_LABELS[goalTimeframe] : null,
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </p>
+                  )}
                 </div>
-              </div>
-              <div className="space-y-2">
-                <p className="text-xs text-[#a1a1aa] text-center">Most Recent</p>
-                <div className="relative aspect-[3/4] rounded-lg overflow-hidden">
-                  <Image
-                    src={latestPhoto.photo_url}
-                    alt="Most recent photo"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              </div>
+              )}
             </div>
           </CardContent>
         </Card>

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
-import { LogOut, Lock, Sparkles, Cpu } from 'lucide-react'
+import { LogOut, Cpu } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { profileSchema, type ProfileFormData } from '@/lib/validations/profile'
 import { useProfile } from '@/lib/hooks/useProfile'
@@ -20,6 +20,7 @@ import { Separator } from '@/components/ui/separator'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { RankBadge } from '@/components/shared/RankBadge'
 import { SkeletonCard } from '@/components/shared/SkeletonCard'
+import { GoalPhysiqueCard } from '@/components/progress/GoalPhysiqueCard'
 import type { Rank } from '@/types'
 
 export default function ProfilePage() {
@@ -303,21 +304,10 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Goal physique AI placeholder */}
-      <div className="relative overflow-hidden bg-[#111111] border-2 border-dashed border-[#2a2a2a] rounded-xl p-5 space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            <span className="font-semibold text-white">Goal Physique</span>
-          </div>
-          <Badge variant="muted">Coming Soon</Badge>
-        </div>
-        <p className="text-sm text-[#a1a1aa]">
-          Generate your goal physique with AI — upload a reference image or describe your target body composition.
-        </p>
-        <Button variant="outline" disabled className="flex items-center gap-2">
-          <Lock className="h-4 w-4" /> Generate Goal Physique
-        </Button>
+      {/* Goal physique */}
+      <div className="space-y-3">
+        <h2 className="font-semibold text-white">Goal Physique</h2>
+        <GoalPhysiqueCard profile={profile} showRemove />
       </div>
 
       {/* 3D avatar AI placeholder */}

@@ -3,6 +3,7 @@ import type { Database } from '@/types/supabase'
 import type { ProgressPhoto } from '@/types'
 
 const BUCKET = 'progress-photos'
+const GOAL_BUCKET = 'goal-physique'
 const SIGNED_URL_EXPIRY = 3600 // 1 hour
 
 /**
@@ -39,4 +40,21 @@ export async function signPhotoUrls(
   )
 
   return signed
+}
+
+/**
+ * Generates a fresh signed URL for a user's goal physique image.
+ * Returns null if the file doesn't exist or signing fails.
+ */
+export async function signGoalPhysiqueUrl(
+  supabase: SupabaseClient<Database>,
+  userId: string
+): Promise<string | null> {
+  const path = `${userId}/goal.jpg`
+  const { data, error } = await supabase.storage
+    .from(GOAL_BUCKET)
+    .createSignedUrl(path, SIGNED_URL_EXPIRY)
+
+  if (error || !data?.signedUrl) return null
+  return data.signedUrl
 }
