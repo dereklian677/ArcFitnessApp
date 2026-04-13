@@ -19,6 +19,8 @@ export type PersonalRecordInsert = Database['public']['Tables']['personal_record
 export type Rank = 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Diamond'
 export type GoalType = 'lean' | 'athletic' | 'muscular'
 export type PhotoType = 'front' | 'back' | 'side' | 'custom'
+export type ViewType = 'front' | 'back' | 'side'
+export const VIEWS: ViewType[] = ['front', 'back', 'side']
 
 export type WorkoutWithExercises = Workout & {
   exercises: Exercise[]

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/supabase'
-import type { ProgressPhoto } from '@/types'
+import type { ProgressPhoto, ViewType } from '@/types'
 
 const BUCKET = 'progress-photos'
 const GOAL_BUCKET = 'goal-physique'
@@ -43,18 +43,53 @@ export async function signPhotoUrls(
 }
 
 /**
- * Generates a fresh signed URL for a user's goal physique image.
+ * Generates a fresh signed URL for a user's goal physique image for a specific view.
  * Returns null if the file doesn't exist or signing fails.
  */
 export async function signGoalPhysiqueUrl(
   supabase: SupabaseClient<Database>,
-  userId: string
+  userId: string,
+  view: ViewType = 'front'
 ): Promise<string | null> {
-  const path = `${userId}/goal.jpg`
+  const path = `${userId}/goal-${view}.jpg`
   const { data, error } = await supabase.storage
     .from(GOAL_BUCKET)
     .createSignedUrl(path, SIGNED_URL_EXPIRY)
 
   if (error || !data?.signedUrl) return null
   return data.signedUrl
+}
+
+/**
+ * Signs URLs for all goal physique views that the user has generated.
+ * Checks the profile's per-view URL columns before attempting to sign.
+ */
+export async function signAllGoalPhysiqueUrls(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  profile: {
+    goal_image_front_url?: string | null
+    goal_image_back_url?: string | null
+    goal_image_side_url?: string | null
+    goal_image_url?: string | null
+  }
+): Promise<Partial<Record<ViewType, string>>> {
+  const result: Partial<Record<ViewType, string>> = {}
+
+  const viewsToSign: { view: ViewType; hasData: boolean }[] = [
+    { view: 'front', hasData: !!(profile.goal_image_front_url || profile.goal_image_url) },
+    { view: 'back', hasData: !!profile.goal_image_back_url },
+    { view: 'side', hasData: !!profile.goal_image_side_url },
+  ]
+
+  await Promise.all(
+    viewsToSign
+      .filter(({ hasData }) => hasData)
+      .map(async ({ view }) => {
+        const url = await signGoalPhysiqueUrl(supabase, userId, view)
+        if (url) result[view] = url
+      })
+  )
+
+  return result
 }

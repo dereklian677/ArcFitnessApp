@@ -21,6 +21,12 @@ export interface Database {
           goal_timeframe: '6months' | '1year' | '2years' | null
           goal_generated_at: string | null
           goal_gender: 'male' | 'female' | null
+          goal_image_front_url: string | null
+          goal_image_back_url: string | null
+          goal_image_side_url: string | null
+          goal_generated_front_at: string | null
+          goal_generated_back_at: string | null
+          goal_generated_side_at: string | null
           unit_preference: 'metric' | 'imperial'
           progress_score: number
           rank: 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Diamond'
@@ -40,6 +46,12 @@ export interface Database {
           goal_timeframe?: '6months' | '1year' | '2years' | null
           goal_generated_at?: string | null
           goal_gender?: 'male' | 'female' | null
+          goal_image_front_url?: string | null
+          goal_image_back_url?: string | null
+          goal_image_side_url?: string | null
+          goal_generated_front_at?: string | null
+          goal_generated_back_at?: string | null
+          goal_generated_side_at?: string | null
           unit_preference?: 'metric' | 'imperial'
           progress_score?: number
           rank?: 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Diamond'
@@ -59,6 +71,12 @@ export interface Database {
           goal_timeframe?: '6months' | '1year' | '2years' | null
           goal_generated_at?: string | null
           goal_gender?: 'male' | 'female' | null
+          goal_image_front_url?: string | null
+          goal_image_back_url?: string | null
+          goal_image_side_url?: string | null
+          goal_generated_front_at?: string | null
+          goal_generated_back_at?: string | null
+          goal_generated_side_at?: string | null
           unit_preference?: 'metric' | 'imperial'
           progress_score?: number
           rank?: 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Diamond'

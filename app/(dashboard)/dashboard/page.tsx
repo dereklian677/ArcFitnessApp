@@ -3,7 +3,7 @@ import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import { Plus, Camera, Dumbbell, Flame } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import { signPhotoUrls, signGoalPhysiqueUrl } from '@/lib/supabase/storage'
+import { signPhotoUrls, signAllGoalPhysiqueUrls } from '@/lib/supabase/storage'
 import { calculateVolume, getGreeting, getRankProgress, formatDateShort, formatVolume } from '@/lib/utils'
 import { getNextRank } from '@/lib/constants/ranks'
 import { ScoreRing } from '@/components/progress/ScoreRing'
@@ -49,10 +49,8 @@ export default async function DashboardPage() {
 
   const recentPhotos = await signPhotoUrls(supabase, photosRes.data ?? [])
 
-  // Re-sign goal physique URL server-side (stored URL may have expired)
-  const goalSignedUrl = profile.goal_image_url
-    ? await signGoalPhysiqueUrl(supabase, user.id)
-    : null
+  // Re-sign goal physique URLs server-side (stored URLs may have expired)
+  const goalSignedUrls = await signAllGoalPhysiqueUrls(supabase, user.id, profile)
 
   const firstName = profile.full_name?.split(' ')[0] ?? profile.username ?? 'there'
   const rank = profile.rank as Rank
@@ -164,7 +162,7 @@ export default async function DashboardPage() {
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-semibold text-white">Goal Physique</h2>
         </div>
-        <GoalPhysiqueCard profile={profile} initialSignedUrl={goalSignedUrl} />
+        <GoalPhysiqueCard profile={profile} initialSignedUrls={goalSignedUrls} />
       </section>
 
       {/* Quick actions */}

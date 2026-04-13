@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Camera } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { PhotoCard } from './PhotoCard'
@@ -19,13 +20,22 @@ const FILTER_TABS = [
   { value: 'side', label: 'Side' },
 ]
 
-export function PhotoGrid({ photos }: PhotoGridProps) {
+export function PhotoGrid({ photos: initialPhotos }: PhotoGridProps) {
+  const [photos, setPhotos] = useState<ProgressPhoto[]>(initialPhotos)
   const [selectedPhoto, setSelectedPhoto] = useState<ProgressPhoto | null>(null)
   const [activeTab, setActiveTab] = useState('all')
 
+  async function handleDelete(id: string) {
+    const res = await fetch(`/api/photos/${id}`, { method: 'DELETE' })
+    if (!res.ok) { toast.error('Failed to delete photo'); return }
+    toast.success('Photo deleted')
+    setPhotos((prev) => prev.filter((p) => p.id !== id))
+    setSelectedPhoto((prev) => (prev?.id === id ? null : prev))
+  }
+
   const filtered = activeTab === 'all'
     ? photos
-    : photos.filter((p) => p.photo_type === activeTab as PhotoType)
+    : photos.filter((p) => p.photo_type === (activeTab as PhotoType))
 
   return (
     <>
@@ -55,6 +65,7 @@ export function PhotoGrid({ photos }: PhotoGridProps) {
                   key={photo.id}
                   photo={photo}
                   onClick={setSelectedPhoto}
+                  onDelete={handleDelete}
                 />
               ))}
             </div>

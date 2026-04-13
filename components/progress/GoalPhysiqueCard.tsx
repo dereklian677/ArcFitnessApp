@@ -2,12 +2,14 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { Sparkles, Clock, Trash2 } from 'lucide-react'
+import { Sparkles, Clock, Trash2, CheckCircle, ChevronRight, Camera } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { GoalPhysiqueGenerator } from './GoalPhysiqueGenerator'
+import { PhysiqueLightbox } from './PhysiqueLightbox'
 import { useGoalPhysique } from '@/lib/hooks/useGoalPhysique'
-import type { Profile } from '@/types'
+import { VIEWS, type Profile, type ViewType } from '@/types'
+import { cn } from '@/lib/utils'
 
 const TIMEFRAME_LABELS: Record<string, string> = {
   '6months': '6 Months',
@@ -15,34 +17,49 @@ const TIMEFRAME_LABELS: Record<string, string> = {
   '2years': '2 Years',
 }
 
+const VIEW_LABELS: Record<ViewType, string> = {
+  front: 'Front',
+  back: 'Back',
+  side: 'Side',
+}
+
 interface GoalPhysiqueCardProps {
-  /** Server-side profile (initial data). Card manages its own local state after generation. */
   profile: Profile | null
-  /**
-   * Pre-signed URL generated server-side. Preferred over profile.goal_image_url
-   * which may be an expired signed URL.
-   */
+  initialSignedUrls?: Partial<Record<ViewType, string>>
+  /** @deprecated Use initialSignedUrls instead */
   initialSignedUrl?: string | null
-  /** Show the remove button — used on the profile page only. */
   showRemove?: boolean
 }
 
-export function GoalPhysiqueCard({ profile, initialSignedUrl, showRemove = false }: GoalPhysiqueCardProps) {
+export function GoalPhysiqueCard({
+  profile,
+  initialSignedUrls,
+  initialSignedUrl,
+  showRemove = false,
+}: GoalPhysiqueCardProps) {
   const [open, setOpen] = useState(false)
-  const [initialStep, setInitialStep] = useState<1 | 2 | 3 | 4>(1)
+  const [targetView, setTargetView] = useState<ViewType>('front')
 
-  // Local display state — initialised from server-provided data, updated on generation/removal
-  const [imageUrl, setImageUrl] = useState<string | null>(
-    initialSignedUrl ?? profile?.goal_image_url ?? null
-  )
+  // Build initial URL map from props
+  const buildInitialUrls = (): Partial<Record<ViewType, string>> => {
+    if (initialSignedUrls && Object.keys(initialSignedUrls).length > 0) return initialSignedUrls
+    const fallback = initialSignedUrl ?? profile?.goal_image_url ?? null
+    return fallback ? { front: fallback } : {}
+  }
+
+  const [imageUrls, setImageUrls] = useState<Partial<Record<ViewType, string>>>(buildInitialUrls)
   const [goalType, setGoalType] = useState<string | null>(profile?.goal_type ?? null)
   const [timeframe, setTimeframe] = useState<string | null>(profile?.goal_timeframe ?? null)
   const [generatedAt, setGeneratedAt] = useState<string | null>(profile?.goal_generated_at ?? null)
   const [isRemoving, setIsRemoving] = useState(false)
 
-  const { refreshSignedUrl, removeGoalPhysique } = useGoalPhysique()
+  // Lightbox state
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxView, setLightboxView] = useState<ViewType>('front')
 
-  const hasGoal = !!imageUrl
+  const { removeGoalPhysique } = useGoalPhysique()
+
+  const hasAnyGoal = VIEWS.some(v => imageUrls[v])
 
   const goalLabel = [
     goalType ? goalType.charAt(0).toUpperCase() + goalType.slice(1) : null,
@@ -56,28 +73,30 @@ export function GoalPhysiqueCard({ profile, initialSignedUrl, showRemove = false
     : null
 
   const handleSuccess = (
-    newImageUrl: string,
+    results: Partial<Record<ViewType, { imageUrl: string; generatedAt: string }>>,
     newGoalType: string,
     newTimeframe: string,
-    _gender: string,
-    newGeneratedAt: string
+    _gender: string
   ) => {
-    setImageUrl(newImageUrl)
+    const newUrls: Partial<Record<ViewType, string>> = { ...imageUrls }
+    let latestGeneratedAt = generatedAt
+    for (const [view, data] of Object.entries(results)) {
+      newUrls[view as ViewType] = data.imageUrl
+      if (!latestGeneratedAt || data.generatedAt > latestGeneratedAt) {
+        latestGeneratedAt = data.generatedAt
+      }
+    }
+    setImageUrls(newUrls)
     setGoalType(newGoalType)
     setTimeframe(newTimeframe)
-    setGeneratedAt(newGeneratedAt)
-  }
-
-  const handleImageError = async () => {
-    const newUrl = await refreshSignedUrl()
-    if (newUrl) setImageUrl(newUrl)
+    setGeneratedAt(latestGeneratedAt)
   }
 
   const handleRemove = async () => {
     setIsRemoving(true)
     try {
       await removeGoalPhysique()
-      setImageUrl(null)
+      setImageUrls({})
       setGoalType(null)
       setTimeframe(null)
       setGeneratedAt(null)
@@ -89,97 +108,158 @@ export function GoalPhysiqueCard({ profile, initialSignedUrl, showRemove = false
     }
   }
 
+  const openGeneratorForView = (view: ViewType) => {
+    setTargetView(view)
+    setOpen(true)
+  }
+
+  const openLightbox = (view: ViewType) => {
+    setLightboxView(view)
+    setLightboxOpen(true)
+  }
+
+  // Build existingResults for the generator from current image state
+  const existingResults: Partial<Record<ViewType, { imageUrl: string }>> = {}
+  for (const [v, url] of Object.entries(imageUrls)) {
+    if (url) existingResults[v as ViewType] = { imageUrl: url }
+  }
+
   return (
     <>
-      {hasGoal ? (
-        <div className="rounded-xl border-2 border-primary/30 bg-[#0a0a0a] overflow-hidden">
-          {/* Goal image */}
-          <div className="relative w-full" style={{ aspectRatio: '3/4', maxHeight: 280 }}>
-            <Image
-              src={imageUrl!}
-              alt="Goal physique"
-              fill
-              className="object-cover object-top"
-              sizes="(max-width: 768px) 100vw, 400px"
-              onError={handleImageError}
-            />
+      <div className="rounded-xl border border-[#1a1a1a] bg-[#0a0a0a] overflow-hidden">
+        {/* Header */}
+        <div className="px-4 pt-4 pb-2 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <p className="text-sm font-semibold text-white">Goal Physique</p>
           </div>
-
-          {/* Meta + actions */}
-          <div className="p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                {goalLabel && <p className="font-semibold text-white text-sm">{goalLabel}</p>}
-                {daysAgo !== null && (
-                  <p className="text-xs text-[#a1a1aa] mt-0.5 flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    Generated {daysAgo === 0 ? 'today' : `${daysAgo}d ago`}
-                  </p>
-                )}
-              </div>
-              <Sparkles className="h-4 w-4 text-primary flex-shrink-0" />
-            </div>
-
-            <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            {hasAnyGoal && goalLabel && (
+              <span className="text-xs text-[#a1a1aa]">{goalLabel}</span>
+            )}
+            {hasAnyGoal && daysAgo !== null && (
+              <span className="text-xs text-[#555] flex items-center gap-1">
+                <Clock className="h-2.5 w-2.5" />
+                {daysAgo === 0 ? 'today' : `${daysAgo}d ago`}
+              </span>
+            )}
+            {showRemove && hasAnyGoal && (
               <Button
                 size="sm"
                 variant="outline"
-                className="flex-1"
-                onClick={() => {
-                  setInitialStep(4)
-                  setOpen(true)
-                }}
+                className="h-6 w-6 p-0 text-red-400 border-red-400/20 hover:bg-red-400/10 hover:text-red-300"
+                disabled={isRemoving}
+                onClick={handleRemove}
+                aria-label="Remove goal physique"
               >
-                View / Regenerate
+                <Trash2 className="h-3 w-3" />
               </Button>
-              {showRemove && (
+            )}
+          </div>
+        </div>
+
+        {/* Per-view rows */}
+        <div className="divide-y divide-[#111]">
+          {VIEWS.map((view) => {
+            const url = imageUrls[view]
+            const label = VIEW_LABELS[view]
+            const isGenerated = !!url
+
+            return (
+              <div key={view} className="flex items-center gap-3 px-4 py-3">
+                {/* Thumbnail — clickable to expand */}
+                <button
+                  type="button"
+                  className={cn(
+                    'relative w-9 h-12 rounded-md overflow-hidden flex-shrink-0 border border-[#1a1a1a] transition-opacity',
+                    isGenerated ? 'cursor-pointer hover:opacity-80' : 'cursor-default bg-[#111]'
+                  )}
+                  onClick={() => isGenerated && openLightbox(view)}
+                  disabled={!isGenerated}
+                  aria-label={isGenerated ? `Expand ${label} goal physique` : undefined}
+                >
+                  {url ? (
+                    <Image
+                      src={url}
+                      alt={`${label} goal`}
+                      fill
+                      className="object-cover"
+                      sizes="36px"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <Camera className="h-3 w-3 text-[#333]" />
+                    </div>
+                  )}
+                </button>
+
+                {/* Label + status */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-white">{label}</p>
+                  {isGenerated ? (
+                    <p className="text-xs text-green-400 flex items-center gap-1 mt-0.5">
+                      <CheckCircle className="h-3 w-3" />
+                      Generated
+                    </p>
+                  ) : (
+                    <p className="text-xs text-[#555] mt-0.5">Not generated</p>
+                  )}
+                </div>
+
+                {/* Action button */}
                 <Button
                   size="sm"
-                  variant="outline"
-                  className="text-red-400 border-red-400/20 hover:bg-red-400/10 hover:text-red-300"
-                  disabled={isRemoving}
-                  onClick={handleRemove}
+                  variant={isGenerated ? 'outline' : 'default'}
+                  className={cn(
+                    'flex-shrink-0 h-7 text-xs gap-1',
+                    !isGenerated && 'bg-primary/90 hover:bg-primary'
+                  )}
+                  onClick={() => openGeneratorForView(view)}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  {isGenerated ? (
+                    'Regenerate'
+                  ) : (
+                    <>
+                      Generate
+                      <ChevronRight className="h-3 w-3" />
+                    </>
+                  )}
                 </Button>
-              )}
-            </div>
-          </div>
+              </div>
+            )
+          })}
         </div>
-      ) : (
-        <div className="rounded-xl border-2 border-dashed border-primary/30 bg-[#0a0a0a] p-6 space-y-4">
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-primary/10 flex-shrink-0">
-              <Sparkles className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="font-semibold text-white text-sm">See your transformation</p>
-              <p className="text-xs text-[#a1a1aa] mt-0.5">
-                Generate an AI vision of your goal physique
-              </p>
-            </div>
+
+        {/* Empty state hint */}
+        {!hasAnyGoal && (
+          <div className="px-4 pb-4 pt-1">
+            <p className="text-xs text-[#555] text-center">
+              Upload a photo for each view to see your goal physique
+            </p>
           </div>
-          <Button
-            className="w-full"
-            onClick={() => {
-              setInitialStep(1)
-              setOpen(true)
-            }}
-          >
-            Generate Now
-          </Button>
-        </div>
-      )}
+        )}
+      </div>
 
       <GoalPhysiqueGenerator
         open={open}
         onOpenChange={setOpen}
-        initialStep={initialStep}
-        existingImageUrl={imageUrl}
+        initialView={targetView}
+        existingResults={existingResults}
         existingGoalType={goalType}
         existingTimeframe={timeframe}
         onSuccess={handleSuccess}
       />
+
+      {/* Lightbox */}
+      {lightboxOpen && (
+        <PhysiqueLightbox
+          images={imageUrls}
+          activeView={lightboxView}
+          onViewChange={setLightboxView}
+          onClose={() => setLightboxOpen(false)}
+          goalLabel={goalLabel || undefined}
+        />
+      )}
     </>
   )
 }

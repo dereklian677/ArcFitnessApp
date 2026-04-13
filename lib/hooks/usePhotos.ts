@@ -54,12 +54,16 @@ export function usePhotos() {
     }
 
     // Store the storage path (not a public URL) — signed URLs are generated on fetch
-    const { error: dbError } = await supabase.from('progress_photos').insert({
-      user_id: user.id,
-      photo_url: filePath,
-      photo_type: photoType,
-      taken_at: takenAt ?? new Date().toISOString(),
-    })
+    const { data: insertedPhoto, error: dbError } = await supabase
+      .from('progress_photos')
+      .insert({
+        user_id: user.id,
+        photo_url: filePath,
+        photo_type: photoType,
+        taken_at: takenAt ?? new Date().toISOString(),
+      })
+      .select('id')
+      .single()
 
     if (dbError) {
       toast.error('Failed to save photo record')
@@ -68,18 +72,22 @@ export function usePhotos() {
 
     toast.success('Photo uploaded!')
     await fetchPhotos()
+
+    // Fire-and-forget — scores in background, user is not blocked
+    if (insertedPhoto?.id) {
+      fetch('/api/score-progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newPhotoId: insertedPhoto.id, view: photoType }),
+      }).catch((err) => console.error('Scoring failed silently:', err))
+    }
+
     return true
   }
 
-  const deletePhoto = async (id: string, photoUrl: string) => {
-    const { extractStoragePath } = await import('@/lib/supabase/storage')
-    const path = extractStoragePath(photoUrl)
-    if (path) {
-      await supabase.storage.from('progress-photos').remove([path])
-    }
-
-    const { error } = await supabase.from('progress_photos').delete().eq('id', id)
-    if (error) { toast.error('Failed to delete photo'); return }
+  const deletePhoto = async (id: string) => {
+    const res = await fetch(`/api/photos/${id}`, { method: 'DELETE' })
+    if (!res.ok) { toast.error('Failed to delete photo'); return }
     toast.success('Photo deleted')
     setPhotos((prev) => prev.filter((p) => p.id !== id))
   }
