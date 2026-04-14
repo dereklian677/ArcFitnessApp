@@ -160,7 +160,7 @@ export function WorkoutForm() {
           {fields.map((field, index) => (
             <div key={field.id} className="bg-[#111111] border border-[#1a1a1a] rounded-xl p-5 space-y-4">
               <div className="flex items-start gap-3">
-                <GripVertical className="h-5 w-5 text-[#a1a1aa] mt-2 flex-shrink-0 cursor-grab" />
+                <GripVertical className="hidden sm:block h-5 w-5 text-[#a1a1aa] mt-2 flex-shrink-0 cursor-grab" />
                 <div className="flex-1 space-y-3">
                   <FormField
                     control={form.control}

@@ -85,8 +85,14 @@ export function PhotoUpload() {
                 <Upload className="h-6 w-6 text-[#a1a1aa]" />
               </div>
               <div className="text-center">
-                <p className="text-sm font-medium text-white">Drop your photo here</p>
-                <p className="text-xs text-[#a1a1aa] mt-1">or click to browse · JPEG, PNG, WebP · max 10MB</p>
+                <p className="text-sm font-medium text-white">
+                  <span className="sm:hidden">Tap to select a photo</span>
+                  <span className="hidden sm:inline">Drop your photo here</span>
+                </p>
+                <p className="text-xs text-[#a1a1aa] mt-1">
+                  <span className="sm:hidden">JPEG, PNG, WebP · max 10MB</span>
+                  <span className="hidden sm:inline">or click to browse · JPEG, PNG, WebP · max 10MB</span>
+                </p>
               </div>
             </div>
             <input

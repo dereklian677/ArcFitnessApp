@@ -302,7 +302,7 @@ export default function LandingPage() {
 
       {/* ── Navigation ──────────────────────────────────────── */}
       <nav
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 md:px-16 transition-all duration-300"
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 sm:px-8 md:px-16 transition-all duration-300"
         style={{
           height: 64,
           background: scrolled ? 'rgba(8, 8, 8, 0.85)' : 'transparent',
@@ -322,7 +322,7 @@ export default function LandingPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/login"
-            className="text-sm px-4 py-2 rounded-lg transition-colors duration-150 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            className="hidden sm:inline-flex text-sm px-4 py-2 rounded-lg transition-colors duration-150 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           >
             Log in
           </Link>
@@ -367,7 +367,7 @@ export default function LandingPage() {
           <h1
             className="font-extrabold leading-none mb-6"
             style={{
-              fontSize: 'clamp(52px, 7vw, 80px)',
+              fontSize: 'clamp(36px, 8vw, 80px)',
               color: 'var(--text-primary)',
               letterSpacing: '-0.03em',
             }}
@@ -417,13 +417,13 @@ export default function LandingPage() {
           borderBottom: '1px solid var(--border-subtle)',
         }}
       >
-        <div className="max-w-3xl mx-auto grid grid-cols-3 gap-8 text-center px-6">
+        <div className="max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-0 sm:gap-8 text-center px-6">
           {[
             { stat: '10K+',    label: 'Workouts Logged' },
             { stat: '94%',     label: 'Users See Progress in 30 Days' },
             { stat: '3 Views', label: 'AI Physique Analysis' },
           ].map(({ stat, label }) => (
-            <div key={stat}>
+            <div key={stat} className="py-5 sm:py-0 border-b border-[var(--border-subtle)] sm:border-b-0 last:border-b-0 last:pb-0">
               <div
                 className="text-2xl font-bold tabular-nums"
                 style={{ color: 'var(--text-primary)' }}
@@ -444,7 +444,7 @@ export default function LandingPage() {
         return (
           <section
             key={feature.label}
-            className="py-28 px-6 md:px-16"
+            className="py-16 md:py-28 px-6 md:px-16"
             style={{
               background: i % 2 === 1 ? 'var(--bg-surface)' : 'var(--bg-primary)',
               borderTop: i % 2 === 1 ? '1px solid var(--border-subtle)' : 'none',
@@ -452,16 +452,16 @@ export default function LandingPage() {
             }}
           >
             <div
-              className={`max-w-5xl mx-auto grid md:grid-cols-2 gap-16 items-center ${
+              className={`max-w-5xl mx-auto grid md:grid-cols-2 gap-8 md:gap-16 items-center ${
                 feature.imageLeft
                   ? 'md:[&>*:first-child]:order-2 md:[&>*:last-child]:order-1'
                   : ''
               }`}
             >
-              <div>
+              <div className="order-2 md:order-none">
                 <Mockup />
               </div>
-              <div>
+              <div className="order-1 md:order-none">
                 <p className="section-label mb-4">{feature.label}</p>
                 <h2
                   className="font-extrabold leading-tight mb-5"
@@ -514,7 +514,7 @@ export default function LandingPage() {
         style={{ background: 'var(--bg-primary)' }}
       >
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
+          <div className="text-center mb-10 sm:mb-16">
             <p className="section-label mb-4">The Process</p>
             <h2
               className="font-extrabold"
@@ -528,10 +528,10 @@ export default function LandingPage() {
             </h2>
           </div>
 
-          <div className="relative grid grid-cols-3 gap-8">
+          <div className="relative grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
             {/* Violet dot connector */}
             <div
-              className="absolute top-8 hidden md:flex items-center"
+              className="absolute top-8 hidden sm:flex items-center"
               style={{
                 left: 'calc(16.67% + 28px)',
                 right: 'calc(16.67% + 28px)',
@@ -619,7 +619,7 @@ export default function LandingPage() {
 
       {/* ── Footer ──────────────────────────────────────────── */}
       <footer
-        className="py-8 px-8 md:px-16 flex items-center justify-between"
+        className="py-8 px-5 sm:px-8 md:px-16 flex flex-col sm:flex-row items-center sm:justify-between gap-1"
         style={{
           background: 'var(--bg-primary)',
           borderTop: '1px solid var(--border-subtle)',

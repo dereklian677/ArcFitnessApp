@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { TrendingUp, Trophy } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { signPhotoUrls, signAllGoalPhysiqueUrls } from '@/lib/supabase/storage'
-import { calculateVolume } from '@/lib/utils'
+import { calculateVolume, cn } from '@/lib/utils'
 import { ScoreRing } from '@/components/progress/ScoreRing'
 import { PRTable } from '@/components/progress/PRTable'
 import { AIPlaceholderCard } from '@/components/progress/AIPlaceholderCard'
@@ -105,7 +105,7 @@ export default async function ProgressPage() {
 
       {/* Score ring — center stage */}
       <div
-        className="rounded-xl p-10 flex flex-col items-center gap-5"
+        className="rounded-xl p-6 md:p-10 flex flex-col items-center gap-5"
         style={{
           background: 'var(--bg-surface)',
           border: '1px solid var(--border-subtle)',
@@ -140,10 +140,10 @@ export default async function ProgressPage() {
             <Sparkles className="h-4 w-4" style={{ color: 'var(--accent-violet)' }} />
             <p className="font-medium" style={{ color: 'var(--text-primary)' }}>AI Analysis</p>
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 sm:gap-6">
             <div className="flex items-baseline gap-1.5">
               <span
-                className="text-6xl font-bold tabular-nums"
+                className="text-4xl sm:text-6xl font-bold tabular-nums"
                 style={{ color: 'var(--text-primary)' }}
               >
                 {progressScore}
@@ -202,8 +202,10 @@ export default async function ProgressPage() {
             </div>
             <div className="p-6">
               <div
-                className="grid gap-3"
-                style={{ gridTemplateColumns: `repeat(${colCount}, 1fr)` }}
+                className={cn(
+                  "grid gap-3",
+                  colCount <= 2 ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-3"
+                )}
               >
                 {showComparison && (
                   <>
@@ -235,7 +237,7 @@ export default async function ProgressPage() {
                   </>
                 )}
                 {goalUrl && (
-                  <div className="space-y-2">
+                  <div className={cn("space-y-2", colCount === 3 && "col-span-2 sm:col-span-1")}>
                     <p className="section-label text-center" style={{ color: 'var(--accent-violet)' }}>
                       Your Goal
                     </p>

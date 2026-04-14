@@ -28,7 +28,7 @@ export function PhotoModal({ photo, onClose }: PhotoModalProps) {
 
   return (
     <Dialog open={!!photo} onOpenChange={(open) => { if (!open) onClose() }}>
-      <DialogContent className="max-w-lg p-0 overflow-hidden">
+      <DialogContent className="max-w-lg p-0 max-h-[85vh] overflow-y-auto">
         <div className="relative aspect-[3/4] w-full">
           <Image
             src={photo.photo_url}
