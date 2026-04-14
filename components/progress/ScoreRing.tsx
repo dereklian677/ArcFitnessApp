@@ -29,27 +29,40 @@ export function ScoreRing({ score, size = 120, strokeWidth = 10 }: ScoreRingProp
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="hsl(var(--muted))"
+          stroke="var(--bg-subtle)"
           strokeWidth={strokeWidth}
         />
-        {/* Progress arc */}
+        {/* Progress arc — cyan with subtle glow */}
         <circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="hsl(var(--primary))"
+          stroke="var(--accent-cyan)"
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={animated ? offset : circumference}
-          style={{ transition: 'stroke-dashoffset 1s ease-out' }}
+          style={{
+            transition: 'stroke-dashoffset 1.2s ease-out',
+            filter: 'drop-shadow(0 0 8px rgba(6, 182, 212, 0.35))',
+          }}
         />
       </svg>
       {/* Center label */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-2xl font-bold text-white">{clampedScore}</span>
-        <span className="text-xs text-[#a1a1aa]">/ 100</span>
+        <span
+          className="font-bold tabular-nums"
+          style={{
+            fontSize: size >= 120 ? 28 : size >= 80 ? 20 : 16,
+            color: 'var(--text-primary)',
+          }}
+        >
+          {clampedScore}
+        </span>
+        <span className="text-xs" style={{ color: 'var(--text-secondary)', fontSize: 10 }}>
+          / 100
+        </span>
       </div>
     </div>
   )

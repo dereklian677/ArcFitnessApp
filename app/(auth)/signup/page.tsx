@@ -38,62 +38,91 @@ export default function SignupPage() {
     }
 
     if (authData.session) {
-      // Email confirmation disabled — user is immediately logged in
       router.push('/onboarding')
       router.refresh()
     } else {
-      // Email confirmation enabled — user must verify
       setShowConfirmEmail(true)
     }
   }
 
   if (showConfirmEmail) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] px-4">
+      <div
+        className="min-h-screen flex items-center justify-center px-4"
+        style={{ background: 'var(--bg-primary)' }}
+      >
         <div className="w-full max-w-sm text-center space-y-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/10 mb-2">
-            <CheckCircle className="h-8 w-8 text-green-400" />
+          <div
+            className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-2"
+            style={{ background: 'rgba(16, 185, 129, 0.1)' }}
+          >
+            <CheckCircle className="h-8 w-8" style={{ color: 'var(--accent-green)' }} />
           </div>
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold text-white">Check your email</h1>
-            <p className="text-[#a1a1aa] text-sm">
+            <h1
+              className="text-2xl font-bold"
+              style={{ color: 'var(--text-primary)', letterSpacing: '-0.02em' }}
+            >
+              Check your email
+            </h1>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
               We sent a confirmation link to{' '}
-              <span className="text-white font-medium">{form.getValues('email')}</span>.
-              Click the link to activate your account.
+              <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                {form.getValues('email')}
+              </span>
+              . Click the link to activate your account.
             </p>
           </div>
-          <Link href="/login">
-            <Button variant="outline" className="w-full">
-              Back to login
-            </Button>
-          </Link>
+          <Button asChild variant="outline" className="w-full">
+            <Link href="/login">Back to login</Link>
+          </Button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] px-4">
+    <div
+      className="min-h-screen flex items-center justify-center px-4"
+      style={{ background: 'var(--bg-primary)' }}
+    >
       <div className="w-full max-w-sm space-y-8">
         {/* Logo */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary mb-4">
-            <span className="text-white font-bold text-xl">A</span>
-          </div>
-          <h1 className="text-2xl font-bold text-white">Create your account</h1>
-          <p className="text-[#a1a1aa] text-sm">Start tracking your transformation</p>
+        <div className="text-center">
+          <Link
+            href="/"
+            className="inline-block font-bold text-2xl tracking-wide mb-6"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            Arc
+          </Link>
+          <h1
+            className="text-2xl font-bold"
+            style={{ color: 'var(--text-primary)', letterSpacing: '-0.02em' }}
+          >
+            Create your account
+          </h1>
+          <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
+            Start tracking your transformation
+          </p>
         </div>
 
         {/* Form */}
-        <div className="bg-[#111111] border border-[#1a1a1a] rounded-xl p-6 space-y-6">
+        <div
+          className="rounded-xl p-6 space-y-6"
+          style={{
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-subtle)',
+          }}
+        >
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
               <FormField
                 control={form.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white">Email</FormLabel>
+                    <FormLabel className="section-label">Email</FormLabel>
                     <FormControl>
                       <Input type="email" placeholder="you@example.com" autoComplete="email" {...field} />
                     </FormControl>
@@ -106,7 +135,7 @@ export default function SignupPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white">Password</FormLabel>
+                    <FormLabel className="section-label">Password</FormLabel>
                     <FormControl>
                       <Input type="password" placeholder="••••••••" autoComplete="new-password" {...field} />
                     </FormControl>
@@ -119,7 +148,7 @@ export default function SignupPage() {
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white">Confirm password</FormLabel>
+                    <FormLabel className="section-label">Confirm password</FormLabel>
                     <FormControl>
                       <Input type="password" placeholder="••••••••" autoComplete="new-password" {...field} />
                     </FormControl>
@@ -127,7 +156,7 @@ export default function SignupPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full h-10" disabled={isLoading}>
                 {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                 Create account
               </Button>
@@ -135,9 +164,13 @@ export default function SignupPage() {
           </Form>
         </div>
 
-        <p className="text-center text-sm text-[#a1a1aa]">
+        <p className="text-center text-sm" style={{ color: 'var(--text-secondary)' }}>
           Already have an account?{' '}
-          <Link href="/login" className="text-primary hover:text-primary/80 font-medium transition-colors">
+          <Link
+            href="/login"
+            className="font-medium transition-opacity duration-150 hover:opacity-80"
+            style={{ color: 'var(--accent-violet)' }}
+          >
             Sign in
           </Link>
         </p>

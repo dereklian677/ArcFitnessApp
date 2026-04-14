@@ -3,11 +3,15 @@ import { Inter } from 'next/font/google'
 import { Toaster } from 'sonner'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['100', '200', '300', '400', '500', '700', '800', '900'],
+  variable: '--font-inter',
+})
 
 export const metadata: Metadata = {
   title: 'Arc — Physique Transformation Tracker',
-  description: 'Track your transformation. See where you\'re going.',
+  description: "Track your transformation. See where you're going.",
 }
 
 export default function RootLayout({
@@ -23,9 +27,10 @@ export default function RootLayout({
           position="top-right"
           toastOptions={{
             style: {
-              background: '#111111',
-              border: '1px solid #1a1a1a',
-              color: '#ffffff',
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-subtle)',
+              color: 'var(--text-primary)',
+              fontSize: 13,
             },
           }}
         />

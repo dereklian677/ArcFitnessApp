@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Calendar, Dumbbell, TrendingUp } from 'lucide-react'
+import { Calendar, Dumbbell } from 'lucide-react'
 import { formatDateShort, formatVolume } from '@/lib/utils'
 import type { WorkoutSummary } from '@/types'
 
@@ -12,28 +12,43 @@ export function WorkoutCard({ workout, unitPreference = 'metric' }: WorkoutCardP
   return (
     <Link
       href={`/workouts/${workout.id}`}
-      className="block bg-[#111111] border border-[#1a1a1a] rounded-xl p-5 hover:border-[#2a2a2a] hover:bg-[#151515] transition-all duration-200 group"
+      className="block py-4 px-4 rounded-lg transition-all duration-150 group border-l-2 hover:bg-[var(--bg-surface)]"
+      style={{ borderLeftColor: 'var(--accent-violet)' }}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="font-semibold text-white truncate group-hover:text-primary transition-colors">
+          <h3
+            className="font-medium truncate transition-colors duration-150 group-hover:text-[var(--accent-violet)]"
+            style={{ color: 'var(--text-primary)' }}
+          >
             {workout.title}
           </h3>
-          <div className="flex items-center gap-4 mt-2">
-            <span className="flex items-center gap-1.5 text-xs text-[#a1a1aa]">
-              <Calendar className="h-3.5 w-3.5" />
+          <div className="flex items-center gap-4 mt-1.5">
+            <span
+              className="flex items-center gap-1.5 text-xs"
+              style={{ color: 'var(--text-tertiary)' }}
+            >
+              <Calendar className="h-3 w-3" />
               {formatDateShort(workout.completed_at)}
             </span>
-            <span className="flex items-center gap-1.5 text-xs text-[#a1a1aa]">
-              <Dumbbell className="h-3.5 w-3.5" />
+            <span
+              className="flex items-center gap-1.5 text-xs"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              <Dumbbell className="h-3 w-3" />
               {workout.exercise_count} exercises
             </span>
           </div>
         </div>
         {workout.total_volume > 0 && (
-          <div className="flex items-center gap-1.5 text-sm font-medium text-[#a1a1aa] flex-shrink-0">
-            <TrendingUp className="h-4 w-4" />
-            {formatVolume(workout.total_volume, unitPreference)}
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <span
+              className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+              style={{ background: 'var(--accent-cyan)' }}
+            />
+            <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              {formatVolume(workout.total_volume, unitPreference)}
+            </span>
           </div>
         )}
       </div>

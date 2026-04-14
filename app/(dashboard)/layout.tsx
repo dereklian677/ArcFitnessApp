@@ -26,15 +26,14 @@ export default async function DashboardLayout({
     .eq('id', user.id)
     .single()
 
-  // Redirect to onboarding if profile is incomplete
   if (!profile?.username) {
     redirect('/onboarding')
   }
 
   return (
     <UnitProvider initialPreference={profile?.unit_preference ?? 'metric'}>
-      <div className="flex h-screen bg-[#0a0a0a] overflow-hidden">
-        <Sidebar />
+      <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
+        <Sidebar userName={profile?.full_name} />
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           <Header userName={profile?.full_name} />
           <main className="flex-1 overflow-y-auto pb-16 md:pb-0">

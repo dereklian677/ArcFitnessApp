@@ -4,34 +4,51 @@
 
 @layer base {
   :root {
-    --background: 0 0% 4%;
-    --foreground: 0 0% 100%;
+    /* ── Backgrounds ──────────────────────────────── */
+    --bg-primary:  #080808;
+    --bg-surface:  #0f0f0f;
+    --bg-elevated: #161616;
+    --bg-subtle:   #1c1c1c;
 
-    --card: 0 0% 7%;
-    --card-foreground: 0 0% 100%;
+    /* ── Accents — use sparingly, each has a purpose ─ */
+    --accent-violet:     #7C3AED;   /* Primary CTA, brand */
+    --accent-violet-dim: #5B21B6;   /* Hover */
+    --accent-gold:       #D4AF37;   /* Rank, PRs, achievements */
+    --accent-gold-dim:   #B8962E;
+    --accent-cyan:       #06B6D4;   /* Progress, scores, data */
+    --accent-cyan-dim:   #0891B2;
+    --accent-green:      #10B981;   /* Streaks, success */
 
-    --popover: 0 0% 7%;
-    --popover-foreground: 0 0% 100%;
+    /* ── Text ─────────────────────────────────────── */
+    --text-primary:   #F5F5F5;
+    --text-secondary: #737373;
+    --text-tertiary:  #404040;
 
-    --primary: 263 84% 57%;
+    /* ── Borders ──────────────────────────────────── */
+    --border-subtle:  rgba(255, 255, 255, 0.06);
+    --border-default: rgba(255, 255, 255, 0.10);
+    --border-strong:  rgba(255, 255, 255, 0.20);
+
+    /* ── shadcn/ui HSL compatibility ─────────────── */
+    --background: 0 0% 3%;
+    --foreground: 0 0% 96%;
+    --card: 0 0% 6%;
+    --card-foreground: 0 0% 96%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 262 84% 58%;
     --primary-foreground: 0 0% 100%;
-
-    --secondary: 263 74% 47%;
+    --secondary: 262 60% 40%;
     --secondary-foreground: 0 0% 100%;
-
-    --muted: 240 4% 16%;
-    --muted-foreground: 240 5% 65%;
-
-    --accent: 263 84% 57%;
+    --muted: 0 0% 11%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 262 84% 58%;
     --accent-foreground: 0 0% 100%;
-
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-
-    --border: 0 0% 10%;
-    --input: 0 0% 10%;
-    --ring: 263 84% 57%;
-
+    --border: 0 0% 11%;
+    --input: 0 0% 9%;
+    --ring: 262 84% 58%;
     --radius: 0.5rem;
   }
 }
@@ -41,33 +58,59 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #0a0a0a;
-}
-::-webkit-scrollbar-thumb {
-  background: #1a1a1a;
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #2a2a2a;
+@layer utilities {
+  /* Section label — all-caps, wide spacing, muted */
+  .section-label {
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
 }
 
-/* Shimmer animation for AI placeholders */
+/* ── Scrollbar ──────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--bg-subtle); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+
+/* ── Keyframes ──────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@keyframes pulse-rank {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.8; transform: scale(1.06); }
+}
+
+@keyframes accordion-down {
+  from { height: 0; }
+  to   { height: var(--radix-accordion-content-height); }
+}
+
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height); }
+  to   { height: 0; }
+}
+
+/* ── Shimmer skeleton ───────────────────────────── */
 .shimmer {
   background: linear-gradient(
     90deg,
-    hsl(var(--card)) 25%,
-    hsl(var(--muted)) 50%,
-    hsl(var(--card)) 75%
+    var(--bg-surface) 25%,
+    var(--bg-elevated) 50%,
+    var(--bg-surface) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 2s linear infinite;

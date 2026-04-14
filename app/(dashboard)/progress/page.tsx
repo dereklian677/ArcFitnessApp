@@ -9,13 +9,11 @@ import { ScoreRing } from '@/components/progress/ScoreRing'
 import { PRTable } from '@/components/progress/PRTable'
 import { AIPlaceholderCard } from '@/components/progress/AIPlaceholderCard'
 import { PageHeader } from '@/components/shared/PageHeader'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Sparkles } from 'lucide-react'
 import { VIEWS, type ViewType } from '@/types'
 import type { VolumeDataPoint } from '@/lib/hooks/useProgress'
 import type { ProgressPhoto } from '@/types'
 
-// Load recharts client-only (uses browser APIs)
 const VolumeChart = dynamic(
   () => import('@/components/progress/VolumeChart').then((m) => m.VolumeChart),
   { ssr: false }
@@ -23,8 +21,8 @@ const VolumeChart = dynamic(
 
 const VIEW_LABELS: Record<ViewType, string> = {
   front: 'Front',
-  back: 'Back',
-  side: 'Side',
+  back:  'Back',
+  side:  'Side',
 }
 
 export default async function ProgressPage() {
@@ -33,7 +31,6 @@ export default async function ProgressPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // Fetch profile, photos, PRs, workouts
   const [profileRes, photosRes, prsRes, workoutsRes] = await Promise.all([
     supabase
       .from('profiles')
@@ -57,14 +54,12 @@ export default async function ProgressPage() {
   const photos = await signPhotoUrls(supabase, photosRes.data ?? [])
   const prs = prsRes.data ?? []
 
-  // Sign all available goal views
   const goalSignedUrls = await signAllGoalPhysiqueUrls(supabase, user.id, profileRes.data ?? {})
   const hasAnyGoal = Object.keys(goalSignedUrls).length > 0
 
   const goalType = profileRes.data?.goal_type ?? null
   const goalTimeframe = profileRes.data?.goal_timeframe ?? null
 
-  // Compute volume chart data server-side
   const volumeByDate: Record<string, number> = {}
   ;(workoutsRes.data ?? []).forEach((w) => {
     const date = new Date(w.completed_at).toLocaleDateString('en-US', {
@@ -78,81 +73,94 @@ export default async function ProgressPage() {
     volume,
   }))
 
-  // Group photos by view type
   const photosByView: Record<ViewType, ProgressPhoto[]> = {
     front: photos.filter((p) => p.photo_type === 'front'),
-    back: photos.filter((p) => p.photo_type === 'back'),
-    side: photos.filter((p) => p.photo_type === 'side'),
+    back:  photos.filter((p) => p.photo_type === 'back'),
+    side:  photos.filter((p) => p.photo_type === 'side'),
   }
 
-  // Get latest ai_score per view (for per-view score badges)
   const latestScoreByView: Record<ViewType, number | null> = {
     front: null,
-    back: null,
-    side: null,
+    back:  null,
+    side:  null,
   }
   for (const view of VIEWS) {
-    const viewPhotos = [...photosByView[view]].reverse() // latest first
+    const viewPhotos = [...photosByView[view]].reverse()
     const scored = viewPhotos.find((p) => p.ai_score !== null)
     if (scored) latestScoreByView[view] = scored.ai_score
   }
 
   const TIMEFRAME_LABELS: Record<string, string> = {
     '6months': '6 Months',
-    '1year': '1 Year',
-    '2years': '2 Years',
+    '1year':   '1 Year',
+    '2years':  '2 Years',
   }
 
   return (
-    <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-6">
+    <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-8">
       <PageHeader
         title="Progress"
         description="Track your transformation and personal bests"
       />
 
-      {/* Score ring */}
-      <Card>
-        <CardContent className="flex flex-col items-center py-8 gap-3">
-          <ScoreRing score={progressScore} size={140} />
-          <div className="text-center">
-            <p className="font-semibold text-white">Physique Score</p>
-            <p className="text-xs text-[#a1a1aa] mt-1">
-              {progressScore > 0 ? `${progressScore} / 100` : 'Upload photos to start tracking'}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Score ring — center stage */}
+      <div
+        className="rounded-xl p-10 flex flex-col items-center gap-5"
+        style={{
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--border-subtle)',
+        }}
+      >
+        <ScoreRing score={progressScore} size={160} strokeWidth={10} />
+        <div className="text-center">
+          <p className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
+            Physique Score
+          </p>
+          <p
+            className="section-label mt-1"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            {progressScore > 0
+              ? 'Progress toward goal physique'
+              : 'Upload photos to start tracking'}
+          </p>
+        </div>
+      </div>
 
-      {/* AI analysis — real score if goal is set, placeholder otherwise */}
+      {/* AI analysis */}
       {hasAnyGoal ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              AI Analysis
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-6xl font-bold text-white tabular-nums">{progressScore}</span>
-                <span className="text-xl text-[#a1a1aa]">/100</span>
-              </div>
-              <ScoreRing score={progressScore} size={72} />
+        <div
+          className="rounded-xl p-6"
+          style={{
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-subtle)',
+          }}
+        >
+          <div className="flex items-center gap-2 mb-5">
+            <Sparkles className="h-4 w-4" style={{ color: 'var(--accent-violet)' }} />
+            <p className="font-medium" style={{ color: 'var(--text-primary)' }}>AI Analysis</p>
+          </div>
+          <div className="flex items-center gap-6">
+            <div className="flex items-baseline gap-1.5">
+              <span
+                className="text-6xl font-bold tabular-nums"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                {progressScore}
+              </span>
+              <span className="text-xl" style={{ color: 'var(--text-secondary)' }}>/100</span>
             </div>
-            <div>
-              <p className="text-sm font-medium text-white">Progress toward your goal</p>
-              <p className="text-xs text-[#a1a1aa] mt-1">
-                Score updates automatically when you upload new photos
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+            <ScoreRing score={progressScore} size={72} strokeWidth={6} />
+          </div>
+          <p className="text-sm mt-4" style={{ color: 'var(--text-secondary)' }}>
+            Score updates automatically when you upload new photos
+          </p>
+        </div>
       ) : (
         <AIPlaceholderCard />
       )}
 
-      {/* Per-view photo comparison sections */}
+      {/* Per-view photo comparisons */}
       {VIEWS.map((view) => {
         const viewPhotos = photosByView[view]
         if (viewPhotos.length === 0) return null
@@ -168,27 +176,39 @@ export default async function ProgressPage() {
         const colCount = (showComparison ? 2 : 0) + (goalUrl ? 1 : 0)
 
         return (
-          <Card key={view}>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center justify-between">
-                <span>{VIEW_LABELS[view]} Progress</span>
-                {viewScore !== null && (
-                  <span className="text-sm font-normal text-[#a1a1aa]">
-                    Score:{' '}
-                    <span className="font-semibold text-white">{viewScore}/100</span>
+          <div
+            key={view}
+            className="rounded-xl overflow-hidden"
+            style={{
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-subtle)',
+            }}
+          >
+            <div
+              className="flex items-center justify-between px-6 py-4"
+              style={{ borderBottom: '1px solid var(--border-subtle)' }}
+            >
+              <p className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+                {VIEW_LABELS[view]} Progress
+              </p>
+              {viewScore !== null && (
+                <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                  Score:{' '}
+                  <span className="font-medium tabular-nums" style={{ color: 'var(--accent-cyan)' }}>
+                    {viewScore}/100
                   </span>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+                </span>
+              )}
+            </div>
+            <div className="p-6">
               <div
-                className="grid gap-4"
+                className="grid gap-3"
                 style={{ gridTemplateColumns: `repeat(${colCount}, 1fr)` }}
               >
                 {showComparison && (
                   <>
                     <div className="space-y-2">
-                      <p className="text-xs text-[#a1a1aa] text-center">Earliest</p>
+                      <p className="section-label text-center">Earliest</p>
                       <div className="relative aspect-[3/4] rounded-lg overflow-hidden">
                         <Image
                           src={firstPhoto.photo_url}
@@ -199,8 +219,11 @@ export default async function ProgressPage() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <p className="text-xs text-[#a1a1aa] text-center">Most Recent</p>
-                      <div className="relative aspect-[3/4] rounded-lg overflow-hidden">
+                      <p className="section-label text-center">Most Recent</p>
+                      <div
+                        className="relative aspect-[3/4] rounded-lg overflow-hidden"
+                        style={{ border: '1px solid var(--border-subtle)' }}
+                      >
                         <Image
                           src={latestPhoto.photo_url}
                           alt={`Most recent ${view} photo`}
@@ -213,8 +236,13 @@ export default async function ProgressPage() {
                 )}
                 {goalUrl && (
                   <div className="space-y-2">
-                    <p className="text-xs text-primary text-center font-medium">Your Goal</p>
-                    <div className="rounded-lg overflow-hidden border border-primary/30">
+                    <p className="section-label text-center" style={{ color: 'var(--accent-violet)' }}>
+                      Your Goal
+                    </p>
+                    <div
+                      className="rounded-lg overflow-hidden"
+                      style={{ border: '1px solid rgba(124, 58, 237, 0.3)' }}
+                    >
                       <Image
                         src={goalUrl}
                         alt={`${view} goal physique`}
@@ -224,7 +252,7 @@ export default async function ProgressPage() {
                       />
                     </div>
                     {(goalType || goalTimeframe) && (
-                      <p className="text-xs text-[#a1a1aa] text-center">
+                      <p className="section-label text-center">
                         {[
                           goalType ? goalType.charAt(0).toUpperCase() + goalType.slice(1) : null,
                           goalTimeframe ? TIMEFRAME_LABELS[goalTimeframe] : null,
@@ -236,36 +264,55 @@ export default async function ProgressPage() {
                   </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )
       })}
 
       {/* Volume chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" />
-            Training Volume — Last 30 Days
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div
+        className="rounded-xl overflow-hidden"
+        style={{
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--border-subtle)',
+        }}
+      >
+        <div
+          className="flex items-center gap-2 px-6 py-4"
+          style={{ borderBottom: '1px solid var(--border-subtle)' }}
+        >
+          <TrendingUp className="h-4 w-4" style={{ color: 'var(--accent-cyan)' }} />
+          <p className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+            Training Volume
+          </p>
+          <span className="section-label ml-auto">Last 30 Days</span>
+        </div>
+        <div className="p-6">
           <VolumeChart data={volumeData} />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Personal records */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Trophy className="h-4 w-4 text-yellow-400" />
+      <div
+        className="rounded-xl overflow-hidden"
+        style={{
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--border-subtle)',
+        }}
+      >
+        <div
+          className="flex items-center gap-2 px-6 py-4"
+          style={{ borderBottom: '1px solid var(--border-subtle)' }}
+        >
+          <Trophy className="h-4 w-4" style={{ color: 'var(--accent-gold)' }} />
+          <p className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
             Personal Records
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-3">
+          </p>
+        </div>
+        <div className="px-3 py-4">
           <PRTable records={prs} unitPreference={unitPreference} />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

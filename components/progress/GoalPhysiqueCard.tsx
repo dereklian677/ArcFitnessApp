@@ -126,19 +126,25 @@ export function GoalPhysiqueCard({
 
   return (
     <>
-      <div className="rounded-xl border border-[#1a1a1a] bg-[#0a0a0a] overflow-hidden">
+      <div
+        className="rounded-xl overflow-hidden"
+        style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}
+      >
         {/* Header */}
-        <div className="px-4 pt-4 pb-2 flex items-center justify-between">
+        <div
+          className="px-4 pt-4 pb-3 flex items-center justify-between"
+          style={{ borderBottom: '1px solid var(--border-subtle)' }}
+        >
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <p className="text-sm font-semibold text-white">Goal Physique</p>
+            <Sparkles className="h-4 w-4" style={{ color: 'var(--accent-violet)' }} />
+            <p className="section-label">Goal Physique</p>
           </div>
           <div className="flex items-center gap-2">
             {hasAnyGoal && goalLabel && (
-              <span className="text-xs text-[#a1a1aa]">{goalLabel}</span>
+              <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{goalLabel}</span>
             )}
             {hasAnyGoal && daysAgo !== null && (
-              <span className="text-xs text-[#555] flex items-center gap-1">
+              <span className="text-xs flex items-center gap-1" style={{ color: 'var(--text-tertiary)' }}>
                 <Clock className="h-2.5 w-2.5" />
                 {daysAgo === 0 ? 'today' : `${daysAgo}d ago`}
               </span>
@@ -159,21 +165,29 @@ export function GoalPhysiqueCard({
         </div>
 
         {/* Per-view rows */}
-        <div className="divide-y divide-[#111]">
-          {VIEWS.map((view) => {
+        <div>
+          {VIEWS.map((view, idx) => {
             const url = imageUrls[view]
             const label = VIEW_LABELS[view]
             const isGenerated = !!url
 
             return (
-              <div key={view} className="flex items-center gap-3 px-4 py-3">
-                {/* Thumbnail — clickable to expand */}
+              <div
+                key={view}
+                className="flex items-center gap-3 px-4 py-3"
+                style={idx > 0 ? { borderTop: '1px solid var(--border-subtle)' } : undefined}
+              >
+                {/* Thumbnail */}
                 <button
                   type="button"
                   className={cn(
-                    'relative w-9 h-12 rounded-md overflow-hidden flex-shrink-0 border border-[#1a1a1a] transition-opacity',
-                    isGenerated ? 'cursor-pointer hover:opacity-80' : 'cursor-default bg-[#111]'
+                    'relative w-9 h-12 rounded-md overflow-hidden flex-shrink-0 transition-opacity',
+                    isGenerated ? 'cursor-pointer hover:opacity-80' : 'cursor-default'
                   )}
+                  style={{
+                    background: 'var(--bg-elevated)',
+                    border: '1px solid var(--border-subtle)',
+                  }}
                   onClick={() => isGenerated && openLightbox(view)}
                   disabled={!isGenerated}
                   aria-label={isGenerated ? `Expand ${label} goal physique` : undefined}
@@ -188,21 +202,25 @@ export function GoalPhysiqueCard({
                     />
                   ) : (
                     <div className="flex items-center justify-center h-full">
-                      <Camera className="h-3 w-3 text-[#333]" />
+                      <Camera className="h-3 w-3" style={{ color: 'var(--text-tertiary)' }} />
                     </div>
                   )}
                 </button>
 
                 {/* Label + status */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white">{label}</p>
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    {label}
+                  </p>
                   {isGenerated ? (
-                    <p className="text-xs text-green-400 flex items-center gap-1 mt-0.5">
+                    <p className="text-xs flex items-center gap-1 mt-0.5" style={{ color: 'var(--accent-green)' }}>
                       <CheckCircle className="h-3 w-3" />
                       Generated
                     </p>
                   ) : (
-                    <p className="text-xs text-[#555] mt-0.5">Not generated</p>
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+                      Not generated
+                    </p>
                   )}
                 </div>
 
@@ -210,10 +228,7 @@ export function GoalPhysiqueCard({
                 <Button
                   size="sm"
                   variant={isGenerated ? 'outline' : 'default'}
-                  className={cn(
-                    'flex-shrink-0 h-7 text-xs gap-1',
-                    !isGenerated && 'bg-primary/90 hover:bg-primary'
-                  )}
+                  className="flex-shrink-0 h-7 text-xs gap-1"
                   onClick={() => openGeneratorForView(view)}
                 >
                   {isGenerated ? (
@@ -233,8 +248,8 @@ export function GoalPhysiqueCard({
         {/* Empty state hint */}
         {!hasAnyGoal && (
           <div className="px-4 pb-4 pt-1">
-            <p className="text-xs text-[#555] text-center">
-              Upload a photo for each view to see your goal physique
+            <p className="text-xs text-center" style={{ color: 'var(--text-tertiary)' }}>
+              Generate your goal physique for each view
             </p>
           </div>
         )}
